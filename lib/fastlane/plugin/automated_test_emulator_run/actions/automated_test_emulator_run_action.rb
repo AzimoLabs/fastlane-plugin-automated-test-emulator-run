@@ -6,13 +6,13 @@ module Fastlane
      module SharedValues
      end
 
-    class AzimotestEmulatorRunAction < Action
+    class AutomatedTestEmulatorRunAction < Action
       def self.run(params)
         gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
       
         Action.sh("clear")
 
-        UI.message("The azimotest_emulator_run plugin is working!")
+        UI.message("The automated_test_emulator_run plugin is working!")
 
         # Create output file
         file = Tempfile.new('emulator_output')
