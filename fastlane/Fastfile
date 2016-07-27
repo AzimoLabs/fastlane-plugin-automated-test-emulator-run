@@ -1,3 +1,50 @@
 lane :test do
-  automated_test_emulator_run
+
+  desc "Lane running all tests with default spoon config"
+  lane :Automation_Spoon do
+  	  gradle(task: spoon)
+  end
+
+  desc "Runs tests with single emulator and starts with default spoon config."
+  lane :Automation_EmulatorRun_Spoon do
+      automated_test_emulator_run(
+        avd_name:"Test-Run-Emulator-API23",
+        target_id:"Google Inc.:Google APIs:23",
+        avd_abi:"google_apis/x86_64",
+        shell_command:"spoon",
+      )
+   end
+
+  desc "Runs tests with single emulator and starts with gradle task."
+  lane :Automation_EmulatorRun_Gradle do
+      automated_test_emulator_run(
+        avd_name:"Test-Run-Emulator-API23",
+        target_id:"Google Inc.:Google APIs:23",
+        avd_abi:"google_apis/x86_64",
+        gradle_task:"cleanTest createMockDebugCoverageReport --continue",
+      )
+   end
+
+  desc "Runs tests with single emulator and relies on other lane."
+  lane :Automation_EmulatorRun_Fastlane do
+      automated_test_emulator_run(
+        avd_name:"Test-Run-Emulator-API23",
+        target_id:"Google Inc.:Google APIs:23",
+        avd_abi:"google_apis/x86_64",
+        gradle_task:"bundle exec fastlane Automation_Spoon",
+      )
+   end
+
+  desc "Runs tests with single emulator and uses AVD snapshot as init data for emulator. Starts with default spoon config."
+  lane :Automation_EmulatorRunSnapshot_Spoon do
+      automated_test_emulator_run(
+        avd_name:"Test-Run-Emulator-API23",
+        target_id:"Google Inc.:Google APIs:23",
+        avd_abi:"google_apis/x86_64",
+        initdata_snapshot_path:"~/AVD_Snapshots/AVD_With_Specific_Config.img",
+        shell_command:"spoon",
+      )
+   end
+
+   # more parameters listed in automated_test_emulator_run_action.rb
 end
