@@ -70,7 +70,7 @@ module Fastlane
 
             unless gradle_task.nil?
               UI.message("Using gradle task".green)
-              gradle.trigger(task: params[:task], flags: params[:flags], serial: nil)
+              gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
             end
           ensure 
             waitFor_emulatorStop(sdkRoot, port, params, file)
