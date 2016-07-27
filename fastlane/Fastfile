@@ -11,7 +11,7 @@ lane :test do
         avd_name:"Test-Run-Emulator-API23",
         target_id:"Google Inc.:Google APIs:23",
         avd_abi:"google_apis/x86_64",
-        shell_command:"spoon",
+        gradle_task:"spoon",
       )
    end
 
@@ -31,7 +31,7 @@ lane :test do
         avd_name:"Test-Run-Emulator-API23",
         target_id:"Google Inc.:Google APIs:23",
         avd_abi:"google_apis/x86_64",
-        gradle_task:"bundle exec fastlane Automation_Spoon",
+        shell_command:"bundle exec fastlane Automation_Spoon",
       )
    end
 
@@ -42,7 +42,7 @@ lane :test do
         target_id:"Google Inc.:Google APIs:23",
         avd_abi:"google_apis/x86_64",
         initdata_snapshot_path:"~/AVD_Snapshots/AVD_With_Specific_Config.img",
-        shell_command:"spoon",
+        gradle_task:"spoon",
       )
    end
 
