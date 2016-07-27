@@ -2,7 +2,7 @@ lane :test do
 
   desc "Lane running all tests with default spoon config"
   lane :Automation_Spoon do
-	gradle(task: spoon)
+	gradle(task: "spoon")
   end
 
   desc "Runs tests with single emulator and starts with default spoon config."
