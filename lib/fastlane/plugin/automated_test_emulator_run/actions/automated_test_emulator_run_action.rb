@@ -29,7 +29,7 @@ module Fastlane
         avd_create_options = params[:avd_create_options] unless params[:avd_create_options].nil?
         avd_initdata = "-wipe-data -initdata #{params[:initdata_snapshot_path]}" unless params[:initdata_snapshot_path].nil?
         avd_port = ["-port", port].join(" ")
-        sdkRoot = getSdkRoot(params)
+        sdkRoot = "#{params[:sdk_path]}
 
         # Set up commands
         UI.message("Setting up run commands".yellow)
@@ -93,19 +93,6 @@ module Fastlane
         return port
       end
 
-      def self.getSdkRoot(params)
-        dirs = "#{params[:sdk_path]}".split(':')
-        sdkRoot = ""
-        dirs.each do |dir|
-          if dir.include? "sdk"
-              sdkEndPos = dir.index("sdk") + "sdk".length
-              sdkRoot = dir.slice(0, sdkEndPos)
-              break
-          end
-        end
-        return sdkRoot
-      end
-
       def self.waitFor_emulatorBoot(sdkRoot, port)
         UI.message("Waiting for emulator to finish booting.....".yellow)
         loop do
@@ -163,9 +150,9 @@ module Fastlane
                                      optional: true),
           FastlaneCore::ConfigItem.new(key: :sdk_path,
                                      env_name: "SDK_PATH",
-                                     description: "The path to your android sdk directory (root)",
+                                     description: "The path to your android sdk directory (root). ANDROID_HOME by default",
                                      is_string: true,
-                                     default_value: ENV['PATH'],
+                                     default_value: ENV['ANDROID_HOME'],
                                      optional: true),
           FastlaneCore::ConfigItem.new(key: :shell_command,
                                      env_name: "SHELL_COMMAND",
