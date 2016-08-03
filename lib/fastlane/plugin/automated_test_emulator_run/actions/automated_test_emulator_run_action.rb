@@ -9,8 +9,6 @@ module Fastlane
     class AutomatedTestEmulatorRunAction < Action
       def self.run(params)
         gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
-      
-        Action.sh("clear")
 
         UI.message("The automated_test_emulator_run plugin is working!")
 
