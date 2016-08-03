@@ -29,7 +29,7 @@ module Fastlane
         avd_create_options = params[:avd_create_options] unless params[:avd_create_options].nil?
         avd_initdata = "-wipe-data -initdata #{params[:initdata_snapshot_path]}" unless params[:initdata_snapshot_path].nil?
         avd_port = ["-port", port].join(" ")
-        sdkRoot = "#{params[:sdk_path]}
+        sdkRoot = "#{params[:sdk_path]}"
 
         # Set up commands
         UI.message("Setting up run commands".yellow)
