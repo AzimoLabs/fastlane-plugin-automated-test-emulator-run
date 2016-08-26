@@ -25,6 +25,7 @@ module Fastlane
         avd_name = "--name \"#{params[:avd_name]}\""
         target_id = "--target \"#{params[:target_id]}\""
         avd_abi = "--abi #{params[:avd_abi]}" unless params[:avd_abi].nil?
+        emulator_binary = "#{params[:emulator_binary]}"
         avd_tag = "--tag #{params[:avd_tag]}" unless params[:avd_tag].nil?
         avd_create_options = params[:avd_create_options] unless params[:avd_create_options].nil?
         avd_initdata = "-wipe-data -initdata #{params[:initdata_snapshot_path]}" unless params[:initdata_snapshot_path].nil?
@@ -35,7 +36,7 @@ module Fastlane
         UI.message("Setting up run commands".yellow)
         create_avd_command = [sdkRoot + "/tools/android", "create avd", avd_name, target_id, avd_abi, avd_tag, avd_create_options].join(" ")
         get_devices_command = sdkRoot + "/tools/android list avd".chomp
-        start_avd_command = [sdkRoot + "/tools/emulator", avd_port, "-avd #{params[:avd_name]}", avd_initdata, "-gpu on -no-boot-anim &>#{file.path} &"].join(" ")
+        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, "-gpu on -no-boot-anim &>#{file.path} &"].join(" ")
         shell_command = "#{params[:shell_command]}" unless params[:shell_command].nil?
         gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
 
@@ -172,6 +173,12 @@ module Fastlane
                                      optional: true,
                                      conflicting_options: [:shell_command],
                                      is_string: true),
+          FastlaneCore::ConfigItem.new(key: :emulator_binary,
+                                     env_name: "EMULATOR_BINARY",
+                                     description: "Emulator binary file you would like to use in order to start emulator",
+                                     is_string: true,
+                                     default_value: "emulator",
+                                     optional: true),
         ]
       end
 
