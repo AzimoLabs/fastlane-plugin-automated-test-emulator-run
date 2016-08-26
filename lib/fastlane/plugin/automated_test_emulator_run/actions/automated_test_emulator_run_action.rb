@@ -18,7 +18,13 @@ module Fastlane
 
         # Find unused port
         port = getUnusedTcpPort
-        UI.message(["Open port found", port].join(" ").yellow)
+        if params[:avd_port].nil? 
+          port = getUnusedTcpPort
+          UI.message(["Open port found", port].join(" ").yellow)
+        else
+          port = "#{params[:avd_port]}"
+          UI.message(["Port set by user to:", port].join(" ").yellow)
+        end
 
         # Set up params 
         UI.message("Preparing parameters...".yellow)
@@ -184,12 +190,17 @@ module Fastlane
                                      optional: true,
                                      conflicting_options: [:shell_command],
                                      is_string: true),
-
+          
           FastlaneCore::ConfigItem.new(key: :emulator_binary,
                                      env_name: "EMULATOR_BINARY",
                                      description: "Emulator binary file you would like to use in order to start emulator",
                                      is_string: true,
                                      default_value: "emulator",
+                                     optional: true),
+          FastlaneCore::ConfigItem.new(key: :avd_port,
+                                     env_name: "AVD_PORT",
+                                     description: "Possible to specify port on which emulator should run",
+                                     is_string: true,
                                      optional: true),
           FastlaneCore::ConfigItem.new(key: :avd_start_options,
                                      env_name: "AVD_START_OPTIONS",
