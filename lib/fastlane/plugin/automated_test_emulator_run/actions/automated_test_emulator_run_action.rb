@@ -41,7 +41,7 @@ module Fastlane
 
         # Set up commands
         UI.message("Setting up run commands".yellow)
-        create_avd_command = [sdkRoot + "/tools/android", "create avd", avd_name, target_id, avd_abi, avd_tag, avd_create_options].join(" ")
+        create_avd_command = ["echo \"no\" |", sdkRoot + "/tools/android", "create avd", avd_name, target_id, avd_abi, avd_tag, avd_create_options].join(" ")
         get_devices_command = sdkRoot + "/tools/android list avd".chomp
         start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, avd_start_options, "&>#{file.path} &"].join(" ")
         shell_command = "#{params[:shell_command]}" unless params[:shell_command].nil?
@@ -65,7 +65,7 @@ module Fastlane
         UI.message("Starting AVD....".yellow)
         begin
           Action.sh(start_avd_command)
-          waitFor_emulatorBoot(sdkRoot, port)
+          waitFor_emulatorBoot(sdkRoot, port, params)
 
           UI.message("Starting tests".green)
           begin
@@ -101,15 +101,23 @@ module Fastlane
         return port
       end
 
-      def self.waitFor_emulatorBoot(sdkRoot, port)
+      def self.waitFor_emulatorBoot(sdkRoot, port, params)
         UI.message("Waiting for emulator to finish booting.....".yellow)
-        loop do
-          stdout, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
+        startParams = "#{params[:avd_start_options]}"
 
-          if stdout.strip == "1"
-            break
+        if startParams.include? "-no-window" 
+          Action.sh("adb wait-for-device")
+          Action.sh("adb devices")
+        else
+          loop do
+            stdout, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
+
+            if stdout.strip == "1"
+              break
+            end
           end
         end
+
         UI.message("Emulator Booted!".green)
       end
 
