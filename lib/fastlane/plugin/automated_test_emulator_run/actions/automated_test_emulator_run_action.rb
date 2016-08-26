@@ -22,21 +22,28 @@ module Fastlane
 
         # Set up params 
         UI.message("Preparing parameters...".yellow)
-        avd_name = "--name \"#{params[:avd_name]}\""
-        target_id = "--target \"#{params[:target_id]}\""
-        avd_abi = "--abi #{params[:avd_abi]}" unless params[:avd_abi].nil?
-        emulator_binary = "#{params[:emulator_binary]}"
-        avd_tag = "--tag #{params[:avd_tag]}" unless params[:avd_tag].nil?
-        avd_create_options = params[:avd_create_options] unless params[:avd_create_options].nil?
-        avd_initdata = "-wipe-data -initdata #{params[:initdata_snapshot_path]}" unless params[:initdata_snapshot_path].nil?
-        avd_port = ["-port", port].join(" ")
-        sdkRoot = "#{params[:sdk_path]}"
+
+          # AVD general params
+          sdkRoot = "#{params[:sdk_path]}"
+          avd_name = "--name \"#{params[:avd_name]}\""
+
+          # AVD create params
+          target_id = "--target \"#{params[:target_id]}\""
+          avd_abi = "--abi #{params[:avd_abi]}" unless params[:avd_abi].nil?
+          avd_tag = "--tag #{params[:avd_tag]}" unless params[:avd_tag].nil?
+          avd_create_options = params[:avd_create_options] unless params[:avd_create_options].nil?
+
+          # AVD start params
+          emulator_binary = "#{params[:emulator_binary]}"
+          avd_initdata = "-wipe-data -initdata #{params[:initdata_snapshot_path]}" unless params[:initdata_snapshot_path].nil?
+          avd_port = ["-port", port].join(" ")
+          avd_start_options = params[:avd_start_options] unless params[:avd_start_options].nil?
 
         # Set up commands
         UI.message("Setting up run commands".yellow)
         create_avd_command = [sdkRoot + "/tools/android", "create avd", avd_name, target_id, avd_abi, avd_tag, avd_create_options].join(" ")
         get_devices_command = sdkRoot + "/tools/android list avd".chomp
-        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, "-gpu on -no-boot-anim &>#{file.path} &"].join(" ")
+        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, avd_start_options, "&>#{file.path} &"].join(" ")
         shell_command = "#{params[:shell_command]}" unless params[:shell_command].nil?
         gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
 
@@ -144,17 +151,13 @@ module Fastlane
                                      description: "The sys-img tag to use for the AVD. The default is to auto-select if the platform has only one tag for its system images",
                                      is_string: true,
                                      optional: true),
-          FastlaneCore::ConfigItem.new(key: :initdata_snapshot_path,
-                                     env_name: "INIT_DATA_PATH",
-                                     description: "The path to userdata-qemu which will be used to initialize AVD status",
-                                     is_string: true,
-                                     optional: true),
           FastlaneCore::ConfigItem.new(key: :sdk_path,
                                      env_name: "SDK_PATH",
                                      description: "The path to your android sdk directory (root). ANDROID_HOME by default",
                                      is_string: true,
                                      default_value: ENV['ANDROID_HOME'],
                                      optional: true),
+
           FastlaneCore::ConfigItem.new(key: :shell_command,
                                      env_name: "SHELL_COMMAND",
                                      description: "The shell command you want to execute",
@@ -173,11 +176,22 @@ module Fastlane
                                      optional: true,
                                      conflicting_options: [:shell_command],
                                      is_string: true),
+
           FastlaneCore::ConfigItem.new(key: :emulator_binary,
                                      env_name: "EMULATOR_BINARY",
                                      description: "Emulator binary file you would like to use in order to start emulator",
                                      is_string: true,
                                      default_value: "emulator",
+                                     optional: true),
+          FastlaneCore::ConfigItem.new(key: :avd_start_options,
+                                     env_name: "AVD_START_OPTIONS",
+                                     description: "Additonal run parameters e.g. gpu, audio, boot animation",
+                                     is_string: true,
+                                     optional: true),
+          FastlaneCore::ConfigItem.new(key: :initdata_snapshot_path,
+                                     env_name: "INIT_DATA_PATH",
+                                     description: "The path to userdata-qemu which will be used to initialize AVD status",
+                                     is_string: true,
                                      optional: true),
         ]
       end
