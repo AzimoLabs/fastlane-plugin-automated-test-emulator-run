@@ -7,6 +7,7 @@ module Fastlane
      end
 
     class AutomatedTestEmulatorRunAction < Action
+
       def self.run(params)
         gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
 
@@ -69,9 +70,11 @@ module Fastlane
 
         # Starting AVD
         UI.message("Starting AVD....".yellow)
+
+        emulatorStarted = false
         begin
           Action.sh(start_avd_command)
-          waitFor_emulatorBoot(sdkRoot, port, params)
+          emulatorStarted = waitFor_emulatorBoot(sdkRoot, port, params)
 
           UI.message("Starting tests".green)
           begin
@@ -84,8 +87,9 @@ module Fastlane
               UI.message("Using gradle task".green)
               gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
             end
+            
           ensure 
-            waitFor_emulatorStop(sdkRoot, port, params, file)
+            waitFor_emulatorStop(sdkRoot, port, params, file, emulatorStarted)
           end
         ensure
           file.close
@@ -115,27 +119,37 @@ module Fastlane
           Action.sh("adb wait-for-device")
           Action.sh("adb devices")
         else
+
+          timeoutInSeconds= 150.0
+          startTime = Time.now
           loop do
             stdout, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
+            currentTime = Time.now
+
+            if (currentTime - startTime) >= timeoutInSeconds
+              UI.message("Emulator loading took more than 2 minutes and 30 seconds. Not waiting anymore and trying to run with devices only!".yellow)
+              return false
+            end
 
             if stdout.strip == "1"
-              break
+              UI.message("Emulator Booted!".green)
+              return true
             end
           end
         end
-
-        UI.message("Emulator Booted!".green)
       end
 
-      def self.waitFor_emulatorStop(sdkRoot, port, params, file)
-        adb = Helper::AdbHelper.new(adb_path: sdkRoot + "/platform-tools/adb")
-        temp = File.open(file.path).read
+      def self.waitFor_emulatorStop(sdkRoot, port, params, file, emulatorStarted)
+        if emulatorStarted == true
+          adb = Helper::AdbHelper.new(adb_path: sdkRoot + "/platform-tools/adb")
+          temp = File.open(file.path).read
 
-        UI.message("Shutting down emulator...".green)
-        adb.trigger(command: "emu kill", serial: "emulator-#{port}")
+          UI.message("Shutting down emulator...".green)
+          adb.trigger(command: "emu kill", serial: "emulator-#{port}")
 
-        UI.message("Deleting emulator....".green)
-        Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
+          UI.message("Deleting emulator....".green)
+          Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
+        end
       end
 
       def self.available_options

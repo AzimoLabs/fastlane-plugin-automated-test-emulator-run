@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = %q{krzyk.kamil@gmail.com}
 
   spec.summary       = %q{Allows to wrap gradle task or shell command that runs integrated tests that prepare and starts single AVD before test run. After tests are finished, emulator is killed and deleted.}
-  # spec.homepage      = "https://github.com/<GITHUB_USERNAME>/fastlane-plugin-automated_test_emulator_run"
+  spec.homepage      = "https://github.com/AzimoLabs/fastlane-plugin-automated-test-emulator-run"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
