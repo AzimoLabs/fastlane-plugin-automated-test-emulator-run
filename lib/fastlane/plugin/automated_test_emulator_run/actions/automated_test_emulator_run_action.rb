@@ -87,9 +87,10 @@ module Fastlane
               UI.message("Using gradle task".green)
               gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
             end
-            
-          ensure 
-            waitFor_emulatorStop(sdkRoot, port, params, file, emulatorStarted)
+          end
+
+          if emulatorStarted
+            waitFor_emulatorStop(sdkRoot, port, params, file)
           end
         ensure
           file.close
@@ -118,9 +119,9 @@ module Fastlane
         if startParams.include? "-no-window" 
           Action.sh("adb wait-for-device")
           Action.sh("adb devices")
+          return true
         else
-
-          timeoutInSeconds= 150.0
+          timeoutInSeconds= 300.0
           startTime = Time.now
           loop do
             stdout, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
@@ -139,8 +140,7 @@ module Fastlane
         end
       end
 
-      def self.waitFor_emulatorStop(sdkRoot, port, params, file, emulatorStarted)
-        if emulatorStarted == true
+      def self.waitFor_emulatorStop(sdkRoot, port, params, file)
           adb = Helper::AdbHelper.new(adb_path: sdkRoot + "/platform-tools/adb")
           temp = File.open(file.path).read
 
@@ -149,7 +149,6 @@ module Fastlane
 
           UI.message("Deleting emulator....".green)
           Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
-        end
       end
 
       def self.available_options
