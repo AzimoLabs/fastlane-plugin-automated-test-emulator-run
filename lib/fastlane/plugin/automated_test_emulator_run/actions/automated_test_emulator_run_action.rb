@@ -132,6 +132,9 @@ module Fastlane
           UI.message("Shutting down emulator...".green)
           Action.sh(sdkRoot + "/platform-tools/adb emu kill &>/dev/null")
 
+          delayInSeconds = 45.0
+          sleep(delayInSeconds)
+
           UI.message("Deleting emulator....".green)
           Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
       end
