@@ -13,10 +13,6 @@ module Fastlane
 
         UI.message("The automated_test_emulator_run plugin is working!")
 
-        # Create output file
-        file = Tempfile.new('emulator_output')
-        UI.message(["Created temp file for emulator output", file.path].join(" ").yellow)
-
         # Find unused port
         port = getUnusedTcpPort
         if params[:avd_port].nil? 
@@ -50,7 +46,7 @@ module Fastlane
         UI.message("Setting up run commands".yellow)
         create_avd_command = ["echo \"no\" |", sdkRoot + "/tools/android", "create avd", avd_name, target_id, avd_abi, avd_tag, avd_create_options].join(" ")
         get_devices_command = sdkRoot + "/tools/android list avd".chomp
-        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, avd_start_options, "&>#{file.path} &"].join(" ")
+        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, avd_start_options, " &"].join(" ")
         shell_command = "#{params[:shell_command]}" unless params[:shell_command].nil?
         gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
 
@@ -72,29 +68,25 @@ module Fastlane
         UI.message("Starting AVD....".yellow)
 
         emulatorStarted = false
+      
+        Action.sh(start_avd_command)
+        emulatorStarted = waitFor_emulatorBoot(sdkRoot, port, params)
+
+        UI.message("Starting tests".green)
         begin
-          Action.sh(start_avd_command)
-          emulatorStarted = waitFor_emulatorBoot(sdkRoot, port, params)
-
-          UI.message("Starting tests".green)
-          begin
-            unless shell_command.nil?
-              UI.message("Using shell command".green)
-              Action.sh(shell_command)
-            end
-
-            unless gradle_task.nil?
-              UI.message("Using gradle task".green)
-              gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
-            end
+          unless shell_command.nil?
+            UI.message("Using shell command".green)
+            Action.sh(shell_command)
           end
 
-          if emulatorStarted
-            waitFor_emulatorStop(sdkRoot, port, params, file)
+          unless gradle_task.nil?
+            UI.message("Using gradle task".green)
+            gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
           end
-        ensure
-          file.close
-          file.unlink
+        end
+
+        if emulatorStarted
+          waitFor_emulatorStop(sdkRoot, port, params)
         end
       end
 
@@ -128,7 +120,7 @@ module Fastlane
             currentTime = Time.now
 
             if (currentTime - startTime) >= timeoutInSeconds
-              UI.message("Emulator loading took more than 2 minutes and 30 seconds. Not waiting anymore and trying to run with devices only!".yellow)
+              UI.message("Emulator loading took more than 5 minutes. Not waiting anymore and trying to run with devices only!".yellow)
               return false
             end
 
@@ -140,10 +132,9 @@ module Fastlane
         end
       end
 
-      def self.waitFor_emulatorStop(sdkRoot, port, params, file)
+      def self.waitFor_emulatorStop(sdkRoot, port, params)
           adb = Helper::AdbHelper.new(adb_path: sdkRoot + "/platform-tools/adb")
-          temp = File.open(file.path).read
-
+         
           UI.message("Shutting down emulator...".green)
           adb.trigger(command: "emu kill", serial: "emulator-#{port}")
 
@@ -203,7 +194,7 @@ module Fastlane
                                      optional: true,
                                      conflicting_options: [:shell_command],
                                      is_string: true),
-          
+           
           FastlaneCore::ConfigItem.new(key: :emulator_binary,
                                      env_name: "EMULATOR_BINARY",
                                      description: "Emulator binary file you would like to use in order to start emulator",
