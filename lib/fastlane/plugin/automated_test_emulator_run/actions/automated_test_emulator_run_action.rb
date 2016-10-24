@@ -67,10 +67,8 @@ module Fastlane
         # Starting AVD
         UI.message("Starting AVD....".yellow)
 
-        emulatorStarted = false
-      
         Action.sh(start_avd_command)
-        emulatorStarted = waitFor_emulatorBoot(sdkRoot, port, params)
+        waitFor_emulatorBoot(sdkRoot, port, params)
 
         UI.message("Starting tests".green)
         begin
@@ -85,9 +83,7 @@ module Fastlane
           end
         end
 
-        if emulatorStarted
-          waitFor_emulatorStop(sdkRoot, port, params)
-        end
+        waitFor_emulatorStop(sdkRoot, port, params)
       end
 
       def self.getUnusedTcpPort 
@@ -113,14 +109,14 @@ module Fastlane
           Action.sh("adb devices")
           return true
         else
-          timeoutInSeconds= 300.0
+          timeoutInSeconds= 180.0
           startTime = Time.now
           loop do
             stdout, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
             currentTime = Time.now
 
             if (currentTime - startTime) >= timeoutInSeconds
-              UI.message("Emulator loading took more than 5 minutes. Not waiting anymore and trying to run with devices only!".yellow)
+              UI.message("Emulator loading took more than 3 minutes. Not waiting anymore and trying to run with devices only!".yellow)
               return false
             end
 
@@ -133,10 +129,8 @@ module Fastlane
       end
 
       def self.waitFor_emulatorStop(sdkRoot, port, params)
-          adb = Helper::AdbHelper.new(adb_path: sdkRoot + "/platform-tools/adb")
-         
           UI.message("Shutting down emulator...".green)
-          adb.trigger(command: "emu kill", serial: "emulator-#{port}")
+          Action.sh(sdkRoot + "/platform-tools/adb emu kill &>/dev/null")
 
           UI.message("Deleting emulator....".green)
           Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
