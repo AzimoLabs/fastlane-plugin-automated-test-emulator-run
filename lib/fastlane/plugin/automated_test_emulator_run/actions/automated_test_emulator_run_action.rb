@@ -46,7 +46,7 @@ module Fastlane
         UI.message("Setting up run commands".yellow)
         create_avd_command = ["echo \"no\" |", sdkRoot + "/tools/android", "create avd", avd_name, target_id, avd_abi, avd_tag, avd_create_options].join(" ")
         get_devices_command = sdkRoot + "/tools/android list avd".chomp
-        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, avd_start_options, "&"].join(" ")
+        start_avd_command = [sdkRoot + "/tools/" + emulator_binary, avd_port, "-avd #{params[:avd_name]}", avd_initdata, avd_start_options, "&>/dev/null &"].join(" ")
         shell_command = "#{params[:shell_command]}" unless params[:shell_command].nil?
         gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
 
