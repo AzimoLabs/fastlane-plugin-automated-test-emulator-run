@@ -50,23 +50,13 @@ module Fastlane
         shell_command = "#{params[:shell_command]}" unless params[:shell_command].nil?
         gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
 
-        # Get Available Devices
-        UI.message("Getting avaliable devices".yellow)
-        devices = Action.sh(get_devices_command)
-
-        # Delete avd if one already exists for clean state.
-        unless devices.match(/#{params[:avd_name]}/).nil?
-           UI.message("Deleting existing AVD to create fresh one".yellow)
-           Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
-        end
-
-        # Creating AVD
+        # Recreating AVD
         UI.message("Creating AVD...".yellow)
-        Action.sh(create_avd_command)
+        createEmulator(get_devices_command, create_avd_command, params, sdkRoot)
 
         # Starting AVD
         UI.message("Starting AVD....".yellow)
-        launchEmulator(start_avd_command, sdkRoot, port, params)
+        launchEmulator(start_avd_command, get_devices_command, create_avd_command, sdkRoot, port, params)
       
         UI.message("Starting tests".green)
         begin
@@ -98,13 +88,25 @@ module Fastlane
         return port
       end
 
-      def self.launchEmulator(start_avd_command, sdkRoot, port, params)
-        restart_adb(sdkRoot)
-        Action.sh(start_avd_command)
-        waitFor_emulatorBoot(start_avd_command, sdkRoot, port, params)
+      def self.createEmulator(get_devices_command, create_avd_command, params, sdkRoot)
+        UI.message("Getting avaliable devices".yellow)
+        devices = Action.sh(get_devices_command)
+
+        unless devices.match(/#{params[:avd_name]}/).nil?
+           UI.message("Deleting existing AVD to create fresh one".yellow)
+           Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
+        end
+
+        Action.sh(create_avd_command)
       end
 
-      def self.waitFor_emulatorBoot(start_avd_command, sdkRoot, port, params)
+      def self.launchEmulator(start_avd_command, get_devices_command, create_avd_command, sdkRoot, port, params)
+        restart_adb(sdkRoot)
+        Action.sh(start_avd_command)
+        waitFor_emulatorBoot(start_avd_command, get_devices_command, create_avd_command, sdkRoot, port, params)
+      end
+
+      def self.waitFor_emulatorBoot(start_avd_command, get_devices_command, create_avd_command, sdkRoot, port, params)
         UI.message("Waiting for emulator to finish booting.....".yellow)
         startParams = "#{params[:avd_start_options]}"
 
@@ -113,7 +115,7 @@ module Fastlane
           Action.sh(sdkRoot + "/platform-tools/adb devices")
           return true
         else
-          timeoutInSeconds= 180.0
+          timeoutInSeconds= 150.0
           startTime = Time.now
           loop do
             dev_bootcomplete, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop dev.bootcomplete")
@@ -122,13 +124,17 @@ module Fastlane
             currentTime = Time.now
 
             if (currentTime - startTime) >= timeoutInSeconds
-              UI.message("Emulator loading took more than 3 minutes. Restarting emulator launch until.".yellow)
+              UI.message("Emulator loading took more than 2 minutes 30 seconds. Restarting emulator launch until.".yellow)
               adb_devices_result = Action.sh(sdkRoot + "/platform-tools/adb devices")
               if adb_devices_result.include? "offline"
                 kill_emulator(sdkRoot, port, params)
-                
+
                 delayInSeconds = 20.0
                 sleep(delayInSeconds)
+
+                delete_emulator(sdkRoot, port, params)
+
+                createEmulator(get_devices_command, create_avd_command, params, sdkRoot)
 
                 launchEmulator(start_avd_command, sdkRoot, port, params)
                 break
