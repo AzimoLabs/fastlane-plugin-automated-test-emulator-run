@@ -66,10 +66,8 @@ module Fastlane
 
         # Starting AVD
         UI.message("Starting AVD....".yellow)
-
-        Action.sh(start_avd_command)
-        waitFor_emulatorBoot(sdkRoot, port, params)
-
+        launchEmulator(start_avd_command, sdkRoot, port, params)
+      
         UI.message("Starting tests".green)
         begin
           unless shell_command.nil?
@@ -100,27 +98,45 @@ module Fastlane
         return port
       end
 
-      def self.waitFor_emulatorBoot(sdkRoot, port, params)
+      def self.launchEmulator(start_avd_command, sdkRoot, port, params)
+        restart_adb(sdkRoot)
+        Action.sh(start_avd_command)
+        waitFor_emulatorBoot(start_avd_command, sdkRoot, port, params)
+      end
+
+      def self.waitFor_emulatorBoot(start_avd_command, sdkRoot, port, params)
         UI.message("Waiting for emulator to finish booting.....".yellow)
         startParams = "#{params[:avd_start_options]}"
 
         if startParams.include? "-no-window" 
-          Action.sh("adb wait-for-device")
-          Action.sh("adb devices")
+          Action.sh(sdkRoot + "/platform-tools/adb wait-for-device")
+          Action.sh(sdkRoot + "/platform-tools/adb devices")
           return true
         else
           timeoutInSeconds= 180.0
           startTime = Time.now
           loop do
-            stdout, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
+            dev_bootcomplete, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop dev.bootcomplete")
+            sys_boot_completed, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop sys.boot_completed")
+            bootanim, _stdeerr, _status = Open3.capture3(sdkRoot + ["/platform-tools/adb -s emulator-", port].join("") + " shell getprop init.svc.bootanim")
             currentTime = Time.now
 
             if (currentTime - startTime) >= timeoutInSeconds
-              UI.message("Emulator loading took more than 3 minutes. Not waiting anymore and trying to run with devices only!".yellow)
+              UI.message("Emulator loading took more than 3 minutes. Restarting emulator launch until.".yellow)
+              adb_devices_result = Action.sh(sdkRoot + "/platform-tools/adb devices")
+              if adb_devices_result.include? "offline"
+                kill_emulator(sdkRoot, port, params)
+                
+                delayInSeconds = 20.0
+                sleep(delayInSeconds)
+
+                launchEmulator(start_avd_command, sdkRoot, port, params)
+                break
+              end
               return false
             end
 
-            if stdout.strip == "1"
+            if (dev_bootcomplete.strip == "1" && sys_boot_completed.strip == "1" && bootanim.strip == "stopped")
               UI.message("Emulator Booted!".green)
               return true
             end
@@ -128,15 +144,29 @@ module Fastlane
         end
       end
 
-      def self.waitFor_emulatorStop(sdkRoot, port, params)
+      def self.restart_adb(sdkRoot)
+          UI.message("Restarting adb..".green)
+          Action.sh(sdkRoot + "/platform-tools/adb kill-server")
+          Action.sh(sdkRoot + "/platform-tools/adb start-server")
+      end
+
+      def self.kill_emulator(sdkRoot, port, params)
           UI.message("Shutting down emulator...".green)
-          Action.sh(sdkRoot + "/platform-tools/adb emu kill &>/dev/null")
+          Action.sh(sdkRoot + "/platform-tools/adb -s " + ["emulator-", port].join("") + " emu kill &>/dev/null")
+      end
 
-          delayInSeconds = 45.0
-          sleep(delayInSeconds)
-
+      def self.delete_emulator(sdkRoot, port, params) 
           UI.message("Deleting emulator....".green)
           Action.sh(sdkRoot + "/tools/android delete avd -n #{params[:avd_name]}")
+      end
+
+      def self.waitFor_emulatorStop(sdkRoot, port, params)
+          kill_emulator(sdkRoot, port, params)
+
+          delayInSeconds = 20.0
+          sleep(delayInSeconds)
+
+          delete_emulator(sdkRoot, port, params)
       end
 
       def self.available_options
