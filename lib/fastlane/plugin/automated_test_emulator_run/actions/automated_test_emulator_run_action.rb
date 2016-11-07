@@ -136,7 +136,7 @@ module Fastlane
 
                 createEmulator(get_devices_command, create_avd_command, params, sdkRoot)
 
-                launchEmulator(start_avd_command, sdkRoot, port, params)
+                launchEmulator(start_avd_command, get_devices_command, create_avd_command, sdkRoot, port, params)
                 break
               end
               return false
