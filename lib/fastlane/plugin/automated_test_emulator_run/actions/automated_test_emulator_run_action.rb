@@ -27,6 +27,7 @@ module Fastlane
         UI.message("Preparing parameters...".yellow)
 
           # AVD general params
+          avdRoot = "#{params[:avd_path]}"
           sdkRoot = "#{params[:sdk_path]}"
           avd_name = "--name \"#{params[:avd_name]}\""
 
@@ -53,6 +54,7 @@ module Fastlane
         # Recreating AVD
         UI.message("Creating AVD...".yellow)
         createEmulator(get_devices_command, create_avd_command, params, sdkRoot)
+        configEmulator(params, avdRoot)
 
         # Starting AVD
         UI.message("Starting AVD....".yellow)
@@ -98,6 +100,15 @@ module Fastlane
         end
 
         Action.sh(create_avd_command)
+      end
+
+      def self.configEmulator(params, avdRoot)
+        avd_name = params[:avd_name]
+        avd_hw_config = params[:avd_hw_config] unless
+            unless params[:avd_hw_config].nil?
+              UI.message("Configuring AVD...".yellow)
+              Action.sh("cat #{params[:avd_hw_config]} > " + avdRoot + "/#{params[:avd_name]}.avd/config.ini")
+            end
       end
 
       def self.launchEmulator(start_avd_command, get_devices_command, create_avd_command, sdkRoot, port, params)
@@ -202,6 +213,17 @@ module Fastlane
                                      description: "The sys-img tag to use for the AVD. The default is to auto-select if the platform has only one tag for its system images",
                                      is_string: true,
                                      optional: true),
+          FastlaneCore::ConfigItem.new(key: :avd_hw_config,
+                                       env_name: "AVD_HW_CONFIG",
+                                       description: "The path of the AVD hardware configuration (config.ini)",
+                                       is_string: true,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :avd_path,
+                                       env_name: "AVD_PATH",
+                                       description: "The path to your android AVD directory (root). HOME/.android/avd by default",
+                                       is_string: true,
+                                       default_value: ENV['HOME'] + '/.android/avd',
+                                       optional: true),
           FastlaneCore::ConfigItem.new(key: :sdk_path,
                                      env_name: "SDK_PATH",
                                      description: "The path to your android sdk directory (root). ANDROID_HOME by default",
