@@ -46,5 +46,16 @@ lane :test do
       )
    end
 
+  desc "Runs tests with single emulator and using custom AVD hardware profile."
+  lane :Automation_EmulatorRun_Spoon do
+      automated_test_emulator_run(
+        avd_name:"Test-Run-Emulator-API23",
+        target_id:"Google Inc.:Google APIs:23",
+        avd_abi:"google_apis/x86_64",
+        avd_hw_config:"./fastlane/avd/Test-Run-Emulator-API23/config.ini",
+        gradle_task:"spoon",
+      )
+   end
+
    # more parameters listed in automated_test_emulator_run_action.rb
 end
