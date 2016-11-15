@@ -1,5 +1,5 @@
 module Fastlane
   module AutomatedTestEmulatorRun
-    VERSION = "0.5.16"
+    VERSION = "1.0.0"
   end
 end
