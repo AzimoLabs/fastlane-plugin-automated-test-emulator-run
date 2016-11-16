@@ -10,16 +10,19 @@ module Fastlane
         def self.get_adb_controller(params)
           UI.message(["Preparing commands for Android ADB"].join(" ").yellow)
 
+          # Get paths
           path_sdk = "#{params[:SDK_path]}"
           path_android_binary = path_sdk + "/tools/android"
           path_adb = path_sdk + "/platform-tools/adb"
 
+          # ADB shell command parts
           sh_stop_adb = "kill-server"
           sh_start_adb = "start-server"
           sh_devices_adb = "devices"
           sh_wait_for_device_adb = "wait-for-device"
           sh_list_avd_adb = "list avd"
-  
+
+          # Assemble ADB controller
           adb_controller = ADB_Controller.new
           adb_controller.command_stop = [
            path_adb,

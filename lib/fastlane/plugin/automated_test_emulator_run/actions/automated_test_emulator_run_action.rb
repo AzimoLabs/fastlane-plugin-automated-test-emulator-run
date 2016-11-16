@@ -52,6 +52,20 @@ module Fastlane
             Action.sh(adb_controller.command_stop)
             Action.sh(adb_controller.command_start)
 
+            # Applying custom configs (it's not done directly after create because 'cat' operation seems to fail overwrite)
+            for i in 0..(avd_schemes.length - 1)
+              avd_scheme = avd_schemes[i]
+              avd_controller = avd_controllers[i]
+            
+              UI.message(["Attemting to apply custom config to ", avd_scheme.avd_name].join("").yellow)
+              if avd_controller.command_apply_config_avd.eql? "" 
+                 UI.message(["No config file found for AVD '", avd_scheme.avd_name, "'. AVD won't have config.ini applied."].join("").yellow)
+              else
+                UI.message(["Config file found! Applying custom config to: ", avd_scheme.avd_name].join("").yellow)
+                Action.sh(avd_controller.command_apply_config_avd)
+              end
+            end
+
             # Launching AVDs
             UI.message("Launching all AVDs at the same time".yellow)
             for i in 0..(avd_schemes.length - 1)
@@ -125,10 +139,6 @@ module Fastlane
               if !devices.match(["emulator-", avd_scheme.launch_avd_port].join("")).nil?
                 Action.sh(avd_controller.command_kill_device)
               end
-              
-              # Time for VM
-              delayInSeconds = 10.0
-              sleep(delayInSeconds)
 
               # Delete AVDs
               Action.sh(avd_controller.command_delete_avd)
