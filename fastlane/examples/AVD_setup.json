@@ -1,0 +1,43 @@
+{
+    "avd_list": [
+        {
+          "avd_name": "Test-Emulator-API16-Nexus-5",  
+
+          "create_avd_target": "Google Inc.:Google APIs:16",
+          "create_avd_abi": "google_apis/x86_64",
+          "create_avd_hardware_config_filepath": "~/AVD_Configs/my-Nexus5-API16-amazing-config.img",
+          "create_avd_additional_options": "--device \"Nexus 5\" --skin \"1080x1920\"",  
+          
+          "launch_avd_snapshot_filepath": "~/AVD_Snapshots/AVD_With_Specific_Config.img",
+          "launch_avd_launch_binary_name": "emulator",
+          "launch_avd_port": "5556",
+          "launch_avd_additional_options": "-gpu on"
+        },
+        {
+          "avd_name": "Test-Emulator-API23-Nexus-5",
+
+          "create_avd_target": "Google Inc.:Google APIs:23",
+          "create_avd_abi": "google_apis/x86_64",
+          "create_avd_hardware_config_filepath": "",
+          "create_avd_additional_options": "--device \"Nexus 5\" --skin \"1080x1920\"",
+
+          "launch_avd_snapshot_filepath": "",
+          "launch_avd_launch_binary_name": "emulator",
+          "launch_avd_port": "",
+          "launch_avd_additional_options": "-gpu on"
+        },
+        {
+          "avd_name": "Test-Emulator-API23-Nexus-7", 
+
+          "create_avd_target": "Google Inc.:Google APIs:23",
+          "create_avd_abi": "google_apis/x86_64",
+          "create_avd_hardware_config_filepath": "",
+          "create_avd_additional_options": "--device \"Nexus 7\" --skin \"1200x1920\"",  
+
+          "launch_avd_snapshot_filepath": "",
+          "launch_avd_launch_binary_name": "emulator",
+          "launch_avd_port": "",
+          "launch_avd_additional_options": "-gpu on"
+        }
+    ]
+}

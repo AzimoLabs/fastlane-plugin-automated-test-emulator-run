@@ -2,38 +2,76 @@
 
 [![fastlane Plugin Badge](https://rawcdn.githack.com/fastlane/fastlane/master/fastlane/assets/plugin-badge.svg)](https://rubygems.org/gems/fastlane-plugin-automated_test_emulator_run)
 
-## Getting Started
-
-This project is a [fastlane](https://github.com/fastlane/fastlane) plugin. To get started with `fastlane-plugin-automated_test_emulator_run`, add it to your project by running:
-
-```bash
-fastlane add_plugin automated_test_emulator_run
-```
-
 ## About automated_test_emulator_run
 
-Allows to wrap gradle task or shell command that runs integrated tests that prepare and starts single AVD before test run. After tests are finished, emulator is killed and deleted.
+Starts any number of AVDs. AVDs are created and configured automatically according to user liking before instrumentation test process starts (started either via shell command or from gradle) and killed/deleted after test process finishes.
 
-**Note to author:** Add a more detailed description about this plugin here. If your plugin contains multiple actions, make sure to mention them here.
+## Getting Started
 
-## Example
+This project is a [fastlane](https://github.com/fastlane/fastlane) plugin.
 
-Check out the [example `Fastfile`](fastlane/Fastfile) to see how to use this plugin. Try it by cloning the repo, running `fastlane install_plugins` and `bundle exec fastlane test`. 
+1. To get started with `fastlane-plugin-automated_test_emulator_run`, add it to your project by running:
 
-**Note to author:** Please set up a sample project to make it easy for users to explore what your plugin does. Provide everything that is necessary to try out the plugin in this project (including a sample Xcode/Android project if necessary)
+  ```bash
+  fastlane add_plugin automated_test_emulator_run
+  ```
+2. Create your \*.JSON config file to create AVD launch plan according to schema below/provided example.
 
-## Run tests for this plugin
+3. Wrap your test launch command with plugin and provide link to \*.JSON config.
 
-To run both the tests, and code style validation, run
+## Example of Fastfile
 
+Check out the [example `Fastfile`](fastlane/Fastfile) to see how to use this plugin. Try it by cloning the repo, running `fastlane install_plugins` and `bundle exec fastlane test`.
+
+## JSON config
+
+What is JSON config?
+
+It is a core of this plugin. User can specify any number of AVD devices in JSON file. Each AVD can be configured separately. Plugin will read JSON file and create fresh, new, untouched AVDs on host - use them in tests - and then delete them after test process finishes.
+
+JSON file scheme:
 ```
-rake
+{
+    "avd_list":
+    [
+        {
+          "avd_name": "",  
+
+          "create_avd_target": "",
+          "create_avd_abi": "",
+          "create_avd_hardware_config_filepath": "",
+          "create_avd_additional_options": "",  
+
+          "launch_avd_snapshot_filepath": "",
+          "launch_avd_launch_binary_name": "",
+          "launch_avd_port": "",
+          "launch_avd_additional_options": ""
+        }
+    ]
+}
 ```
 
-To automatically fix many of the styling issues, use 
-```
-rubocop -a
-```
+Parameters:
+- `avd_name` - name of your AVD, avoid using spaces, this file is necessary
+- `create_avd_target` - Android target api level (https://developer.android.com/guide/topics/manifest/uses-sdk-element.html)
+- `create_avd_abi` - CPU architecture used by AVD (https://developer.android.com/ndk/guides/abis.html)
+- `create_avd_hardware_config_filepath` - path to config.ini file containing custom config for your AVD device. After AVD is created this file will be copied into AVD location before it launches.
+- `create_avd_additional_options` - if you think that you need something more you can just add your create parameters here (e.g. "--sdcard 128M", https://developer.android.com/studio/tools/help/android.html)
+- `launch_avd_snapshot_filepath` - plugin will delete and re-create AVD before test start. That means all your permissions and settings will be lost on each emulator run. If you want to apply qemu image with saved AVD state you can put path to it in this field. It will be applied by using "-wipe-data -initdata <path to your file>"
+- `launch_avd_launch_binary_name` - depending on your CPU architecture you need to choose binary file which should launch your AVD (e.g. "emulator", "emulator64-arm", "emulator64-x86")
+- `launch_avd_port` - port on which you wish your AVD should be launched, if you leave this field empty it will be assigned automatically
+- `launch_avd_additional_options` - if you need more customization add your parameters here (e.g. "-gpu on -no-boot-anim -no-window", https://developer.android.com/studio/run/emulator-commandline.html)
+
+Hints:
+
+- all fields need to be present in JSON, if you don't need any of the parameters just leave it empty
+- pick even ports for your AVDs
+- if you can't launch more than 2 AVDs be sure to check how much memory is your HAXM allowed to use (by default it is 2GB and that will allow you to launch around 2 AVDs) If you face any problems with freezing AVDs then be sure to reinstall your HAXM and allow it to use more of RAM (https://software.intel.com/en-us/android/articles/intel-hardware-accelerated-execution-manager)
+- make sure you have all targets/abis installed on your PC if you want to use them (type in terminal: `android list targets`)
+
+Example:
+
+[Example of complete JSON file can be found here.](fastlane/examples/AVD_setup.json)
 
 ## Issues and Feedback
 
