@@ -85,7 +85,8 @@ module Fastlane
             UI.message("Performing wait for params: dev.bootcomplete, sys.boot_completed, init.svc.bootanim".yellow)
             for i in 0..(avd_schemes.length - 1)
               avd_controller = avd_controllers[i]
-              status = wait_for_emulator_boot(adb_controller, avd_controller)
+              timeout = "#{params[:AVD_launch_timeout]}"
+              status = wait_for_emulator_boot(adb_controller, avd_controller, timeout)
               
               if (!status)
                 all_avd_launched = false
@@ -147,8 +148,8 @@ module Fastlane
 
         end
 
-        def self.wait_for_emulator_boot(adb_controller, avd_controller)
-            timeoutInSeconds= 240.0
+        def self.wait_for_emulator_boot(adb_controller, avd_controller, timeout)
+            timeoutInSeconds= timeout.to_i
             startTime = Time.now
 
             launch_status = false
@@ -159,7 +160,7 @@ module Fastlane
               currentTime = Time.now
 
               if (currentTime - startTime) >= timeoutInSeconds
-                UI.message("AVD loading took more than 4 minutes. Restarting launch".red)
+                UI.message("AVD loading took more than 10 minutes. Restarting launch".red)
                 launch_status = false
                 break
               end
@@ -191,6 +192,12 @@ module Fastlane
                                      description: "The path to your android sdk directory (root). ANDROID_HOME by default",
                                      is_string: true,
                                      default_value: ENV['ANDROID_HOME'],
+                                     optional: true),
+          FastlaneCore::ConfigItem.new(key: :AVD_launch_timeout,
+                                     env_name: "AVD_LAUNCH_TIMEOUT",
+                                     description: "Timeout in seconds - after what time should plugin attempt to re-launch AVD setup. Default 600 seconds",
+                                     is_string: true,
+                                     default_value: 600,
                                      optional: true),
 
     
