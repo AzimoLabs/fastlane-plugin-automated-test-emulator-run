@@ -22,7 +22,7 @@ module Fastlane
 
           # Create AVD_scheme objects and fill them with data
           avd_scheme_list = []
-          for i in 0..(avd_hash_list.length - 1)
+          for i in 0...avd_hash_list.length
             avd_hash = avd_hash_list[i]
 
             avd_scheme = AVD_scheme.new
@@ -50,7 +50,7 @@ module Fastlane
           avaliable_ports = get_unused_even_tcp_ports(5556, 5586, avd_scheme_list)
 
           # Fill empty AVD_schemes with open ports
-          for i in 0..(avd_scheme_list.length - 1)
+          for i in 0...avd_scheme_list.length
             avd_scheme = avd_scheme_list[i]
             if avd_scheme.launch_avd_port.eql? ""
               avd_scheme.launch_avd_port = avaliable_ports[0]
@@ -74,7 +74,7 @@ module Fastlane
           reserved_ports = []
 
           # Gather ports requested in JSON config
-          for i in 0..(avd_scheme_list.length - 1)
+          for i in 0...avd_scheme_list.length
             avd_scheme = avd_scheme_list[i]
             unless avd_scheme.launch_avd_port.eql? ""
               reserved_ports << avd_scheme.launch_avd_port
@@ -83,13 +83,13 @@ module Fastlane
 
           # Find next open port which wasn't reserved in JSON config
           port = min_port
-          for i in 0..(avd_scheme_list.length - 1)
+          for i in 0...avd_scheme_list.length
             
             while port < max_port  do
               if !system("lsof -i:#{port}", out: '/dev/null')
 
                 is_port_reserved = false
-                for j in 0..(reserved_ports.length - 1) 
+                for j in 0...reserved_ports.length 
                   if reserved_ports[j].eql?(port.to_s)
                     is_port_reserved = true
                     break

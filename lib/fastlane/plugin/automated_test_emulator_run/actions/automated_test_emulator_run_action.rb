@@ -16,9 +16,8 @@ module Fastlane
           avd_controllers = []
 
           # Create AVD_Controller class for each AVD_scheme
-          for i in 0..(avd_schemes.length - 1)
-            avd_scheme = avd_schemes[i]
-            avd_controller = Factory::AvdControllerFactory.get_avd_controller(params, avd_scheme)
+          for i in 0...avd_schemes.length 
+            avd_controller = Factory::AvdControllerFactory.get_avd_controller(params, avd_schemes[i])
             avd_controllers << avd_controller
           end
 
@@ -31,21 +30,18 @@ module Fastlane
             UI.message("Getting avaliable AVDs".yellow)
             devices = Action.sh(adb_controller.command_get_avds)
            
-            for i in 0..(avd_schemes.length - 1)
-              avd_scheme = avd_schemes[i]
-              avd_controller = avd_controllers[i]
-              
-              if !devices.match(avd_scheme.avd_name).nil?
-                UI.message(["AVD with name '", avd_scheme.avd_name, " 'currently exists."].join("").yellow)
+            for i in 0...avd_schemes.length           
+              unless devices.match(avd_schemes[i].avd_name).nil?
+                UI.message(["AVD with name '", avd_schemes[i].avd_name, " 'currently exists."].join("").yellow)
                 if params[:AVD_recreate_new]
                   # Delete existing AVDs
                   UI.message("AVD_create_new parameter set to true.".yellow)
-                  UI.message(["Deleting existing AVD with name:", avd_scheme.avd_name].join(" ").yellow)
-                  Action.sh(avd_controller.command_delete_avd)
+                  UI.message(["Deleting existing AVD with name:", avd_schemes[i].avd_name].join(" ").yellow)
+                  Action.sh(avd_controllers[i].command_delete_avd)
                  
                   # Re-create AVD
                   UI.message(["Re-creating new AVD."].join(" ").yellow)
-                  Action.sh(avd_controller.command_create_avd)
+                  Action.sh(avd_controllers[i].command_create_avd)
                 else 
                   # Use existing AVD
                   UI.message("AVD_recreate_new parameter set to false.".yellow)
@@ -53,8 +49,8 @@ module Fastlane
                 end
               else 
                 # Create AVD
-                UI.message(["AVD with name '", avd_scheme.avd_name, "' does not exist. Creating new AVD."].join("").yellow)
-                Action.sh(avd_controller.command_create_avd)
+                UI.message(["AVD with name '", avd_schemes[i].avd_name, "' does not exist. Creating new AVD."].join("").yellow)
+                Action.sh(avd_controllers[i].command_create_avd)
               end
             end
 
@@ -64,46 +60,43 @@ module Fastlane
             Action.sh(adb_controller.command_start)
 
             # Applying custom configs (it's not done directly after create because 'cat' operation seems to fail overwrite)
-            for i in 0..(avd_schemes.length - 1)
-              avd_scheme = avd_schemes[i]
-              avd_controller = avd_controllers[i]
-            
-              UI.message(["Attemting to apply custom config to ", avd_scheme.avd_name].join("").yellow)
-              if avd_controller.command_apply_config_avd.eql? "" 
-                 UI.message(["No config file found for AVD '", avd_scheme.avd_name, "'. AVD won't have config.ini applied."].join("").yellow)
+            for i in 0...avd_schemes.length
+              UI.message(["Attemting to apply custom config to ", avd_schemes[i].avd_name].join("").yellow)
+              if avd_controllers[i].command_apply_config_avd.eql? "" 
+                 UI.message(["No config file found for AVD '", avd_schemes[i].avd_name, "'. AVD won't have config.ini applied."].join("").yellow)
               else
-                UI.message(["Config file found! Applying custom config to: ", avd_scheme.avd_name].join("").yellow)
-                Action.sh(avd_controller.command_apply_config_avd)
+                UI.message(["Config file found! Applying custom config to: ", avd_schemes[i].avd_name].join("").yellow)
+                Action.sh(avd_controllers[i].command_apply_config_avd)
               end
             end
 
             # Launching AVDs
             UI.message("Launching all AVDs at the same time.".yellow)
-            for i in 0..(avd_schemes.length - 1)
-              avd_scheme = avd_schemes[i]
-              avd_controller = avd_controllers[i]
-
-              Action.sh(avd_controller.command_start_avd)
+            for i in 0...avd_controllers.length
+              Action.sh(avd_controllers[i].command_start_avd)
             end
 
             # Wait for AVDs finish booting
             UI.message("Waiting for AVDs to finish booting.".yellow)
             boot_status = []
-            for i in 0..(avd_schemes.length - 1)
+            for i in 0...avd_schemes.length
               boot_status << false
             end
 
-            UI.message("Performing wait for params: dev.bootcomplete, sys.boot_completed, init.svc.bootanim.".yellow)
-            for i in 0..(avd_schemes.length - 1)
-              avd_controller = avd_controllers[i]
-              timeout = "#{params[:AVD_launch_timeout]}"
-              status = wait_for_emulator_boot(adb_controller, avd_controller, timeout)
-              
-              if (!status)
-                all_avd_launched = false
-                break
+            UI.message("Performig wait for ADB boot".yellow)
+            all_avd_launched = wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, "#{params[:AVD_adb_launch_timeout]}")
+
+            if all_avd_launched
+              UI.message("Wait for ADB boot completed with success".yellow)
+              UI.message("Performing wait for params: dev.bootcomplete, sys.boot_completed, init.svc.bootanim.".yellow)
+              for i in 0...avd_schemes.length
+                all_avd_launched = wait_for_emulator_boot_by_params(adb_controller, avd_controllers[i], "#{params[:AVD_param_launch_timeout]}")
+                unless all_avd_launched 
+                  break 
+                end     
               end
-              all_avd_launched = true
+            else 
+              UI.message("Wait for ADB boot failed".yellow)
             end
 
             # Deciding if AVD launch should be restarted
@@ -111,17 +104,12 @@ module Fastlane
             if all_avd_launched
               UI.message("AVDs Booted!".green)
             else
-              for i in 0..(avd_schemes.length - 1)
-                avd_scheme = avd_schemes[i]
-                avd_controller = avd_controllers[i]
-
-                # Kill all emulators
-                if !devices.match(["emulator-", avd_scheme.launch_avd_port].join("")).nil?
-                  Action.sh(avd_controller.command_kill_device)
+              for i in 0...avd_schemes.length
+                unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
+                  Action.sh(avd_controllers[i].command_kill_device)
                 end
               end
             end
-
           end
 
           # Launching tests
@@ -143,28 +131,75 @@ module Fastlane
             end
           ensure 
             # Clean up
-            for i in 0..(avd_schemes.length - 1)
-              avd_scheme = avd_schemes[i]
-              avd_controller = avd_controllers[i]
-
+            for i in 0...avd_schemes.length
               # Kill all emulators
-              if !devices.match(["emulator-", avd_scheme.launch_avd_port].join("")).nil?
-                Action.sh(avd_controller.command_kill_device)
+              unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
+                Action.sh(avd_controllers[i].command_kill_device)
               end
 
               # Delete AVDs
               if params[:AVD_clean_after]
                 UI.message("AVD_clean_after param set to true. Deleting AVDs.".green)
-                Action.sh(avd_controller.command_delete_avd)
+                Action.sh(avd_controllers[i].command_delete_avd)
               else
                 UI.message("AVD_clean_after param set to false. Created AVDs won't be deleted.".green)
               end
             end
           end
-
         end
 
-        def self.wait_for_emulator_boot(adb_controller, avd_controller, timeout)
+        def self.wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, timeout)
+          timeoutInSeconds= timeout.to_i
+          startTime = Time.now
+
+          launch_status_hash = Hash.new
+          device_visibility_hash = Hash.new
+
+          for i in 0...avd_schemes.length
+            device_name = ["emulator-", avd_schemes[i].launch_avd_port].join("")
+            launch_status_hash.store(device_name, false)
+            device_visibility_hash.store(device_name, false)
+          end
+
+          launch_status = false
+          loop do
+            currentTime = Time.now
+            devices = Action.sh(adb_controller.command_get_devices)
+
+            # Check if device is visible
+            all_devices_visible = true
+            device_visibility_hash.each do |name, is_visible|
+              unless (devices.match(name).nil? || is_visible)
+                device_visibility_hash[name] = true
+              end
+              all_devices_visible = false unless is_visible
+            end
+
+            # Check if device is booted
+            all_devices_booted = true
+            launch_status_hash.each do |name, is_booted|
+              unless (devices.match(name + " device").nil? || is_booted)
+                launch_status_hash[name] = true
+              end
+              all_devices_booted = false unless is_booted
+            end
+
+            if ((currentTime - startTime) >= timeoutInSeconds) 
+              UI.message(["AVD ADB loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
+              launch_status = false
+              break
+            end
+
+            if (all_devices_booted && all_devices_visible)
+              launch_status = true
+              break
+            end
+            sleep(10)
+          end
+          return launch_status
+        end
+
+        def self.wait_for_emulator_boot_by_params(adb_controller, avd_controller, timeout)
             timeoutInSeconds= timeout.to_i
             startTime = Time.now
 
@@ -176,7 +211,7 @@ module Fastlane
               currentTime = Time.now
 
               if (currentTime - startTime) >= timeoutInSeconds
-                UI.message("AVD loading took more than 10 minutes. Restarting launch".red)
+                UI.message(["AVD param loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
                 launch_status = false
                 break
               end
@@ -212,11 +247,17 @@ module Fastlane
 
 
           #emulator re-launch config params
-          FastlaneCore::ConfigItem.new(key: :AVD_launch_timeout,
-                                       env_name: "AVD_LAUNCH_TIMEOUT",
-                                       description: "Timeout in seconds - after what time should plugin attempt to re-launch AVD setup. Default 600 seconds",
+          FastlaneCore::ConfigItem.new(key: :AVD_param_launch_timeout,
+                                       env_name: "AVD_PARAM_LAUNCH_TIMEOUT",
+                                       description: "Timeout in seconds. Even though ADB might find all devices you still might want to wait for animations to finish and system to boot. Default 60 seconds",
                                        is_string: true,
-                                       default_value: 600,
+                                       default_value: 60,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :AVD_adb_launch_timeout,
+                                       env_name: "AVD_ADB_LAUNCH_TIMEOUT",
+                                       description: "Timeout in seconds. Wait until ADB finds all devices specified in config and sets their value to 'device'. Default 240 seconds",
+                                       is_string: true,
+                                       default_value: 240,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :AVD_recreate_new,
                                        env_name: "AVD_RECREATE_NEW",
