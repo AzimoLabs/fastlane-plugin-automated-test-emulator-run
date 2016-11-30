@@ -9,8 +9,7 @@ lane :test do
   lane :Automation_EmulatorRun_Spoon do
       automated_test_emulator_run(
         AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
-        AVD_path: "~/.android/avd",
-        gradle_task:"spoon",
+        gradle_task:"spoon"
       )
    end
 
@@ -18,8 +17,7 @@ lane :test do
   lane :Automation_EmulatorRun_Gradle do
       automated_test_emulator_run(
         AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
-        AVD_path: "~/.android/avd",
-        gradle_task:"cleanTest createMockDebugCoverageReport --continue",
+        gradle_task:"cleanTest createMockDebugCoverageReport --continue"
       )
    end
 
@@ -27,8 +25,7 @@ lane :test do
   lane :Automation_EmulatorRun_Fastlane do
       automated_test_emulator_run(
         AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
-        AVD_path: "~/.android/avd",
-        shell_command:"bundle exec fastlane Automation_Spoon",
+        shell_task:"fastlane Automation_Spoon"
       )
    end
 
