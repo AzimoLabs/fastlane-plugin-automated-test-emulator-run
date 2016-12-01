@@ -52,13 +52,13 @@ JSON file scheme:
 ```
 
 Parameters:
-- `avd_name` - name of your AVD, avoid using spaces, this file is necessary
-- `create_avd_target` - Android target api level (https://developer.android.com/guide/topics/manifest/uses-sdk-element.html)
+- `avd_name` - name of your AVD, avoid using spaces, this field is necessary
+- `create_avd_target` - Android API Level (https://developer.android.com/guide/topics/manifest/uses-sdk-element.html)
 - `create_avd_abi` - CPU architecture used by AVD (https://developer.android.com/ndk/guides/abis.html)
-- `create_avd_hardware_config_filepath` - path to config.ini file containing custom config for your AVD device. After AVD is created this file will be copied into AVD location before it launches.
+- `create_avd_hardware_config_filepath` - path to config.ini file containing custom config for your AVD. After AVD is created this file will be copied into AVD location before it launches.
 - `create_avd_additional_options` - if you think that you need something more you can just add your create parameters here (e.g. "--sdcard 128M", https://developer.android.com/studio/tools/help/android.html)
-- `launch_avd_snapshot_filepath` - plugin will delete and re-create AVD before test start. That means all your permissions and settings will be lost on each emulator run. If you want to apply qemu image with saved AVD state you can put path to it in this field. It will be applied by using "-wipe-data -initdata <path to your file>"
-- `launch_avd_launch_binary_name` - depending on your CPU architecture you need to choose binary file which should launch your AVD (e.g. "emulator", "emulator64-arm", "emulator64-x86")
+- `launch_avd_snapshot_filepath` - plugin might (if you set it) delete and re-create AVD before test start. That means all your permissions and settings will be lost on each emulator run. If you want to apply qemu image with saved AVD state you can put path to it in this field. It will be applied by using "-wipe-data -initdata <path to your file>"
+- `launch_avd_launch_binary_name` - depending on your CPU architecture you need to choose binary file which should launch your AVD (e.g. "emulator", "emulator64-arm")
 - `launch_avd_port` - port on which you wish your AVD should be launched, if you leave this field empty it will be assigned automatically
 - `launch_avd_additional_options` - if you need more customization add your parameters here (e.g. "-gpu on -no-boot-anim -no-window", https://developer.android.com/studio/run/emulator-commandline.html)
 
@@ -68,6 +68,7 @@ Hints:
 - pick even ports for your AVDs
 - if you can't launch more than 2 AVDs be sure to check how much memory is your HAXM allowed to use (by default it is 2GB and that will allow you to launch around 2 AVDs) If you face any problems with freezing AVDs then be sure to reinstall your HAXM and allow it to use more of RAM (https://software.intel.com/en-us/android/articles/intel-hardware-accelerated-execution-manager)
 - make sure you have all targets/abis installed on your PC if you want to use them (type in terminal: `android list targets`)
+- we recommend adding `-gpu on` to your launching options for each device, it helps when working with many AVDs
 
 Example:
 
