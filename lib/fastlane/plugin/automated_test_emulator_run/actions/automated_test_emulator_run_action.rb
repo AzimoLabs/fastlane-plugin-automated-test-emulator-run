@@ -19,6 +19,19 @@ module Fastlane
           for i in 0...avd_schemes.length 
             avd_controller = Factory::AvdControllerFactory.get_avd_controller(params, avd_schemes[i])
             avd_controllers << avd_controller
+
+            # Checking for output files
+            if File.exists?(avd_controller.output_file.path) 
+              UI.message([
+                "Successfully created tmp output file for AVD:", 
+                avd_schemes[i].avd_name + ".", 
+                "File: " + avd_controller.output_file.path].join(" ").green)
+            else
+              UI.message([
+                "Unable to create output file for AVD:", 
+                avd_schemes[i].avd_name + ".", 
+                "Output will be delegated to null and lost. Check your save/read permissions."].join(" ").red)
+            end
           end
 
           all_avd_launched = false
@@ -143,6 +156,16 @@ module Fastlane
                 Action.sh(avd_controllers[i].command_delete_avd)
               else
                 UI.message("AVD_clean_after param set to false. Created AVDs won't be deleted.".green)
+              end
+
+              # Display output
+              if (File.exists?(avd_controllers[i].output_file.path))
+                UI.message("Displaying log from AVD to console:".green)
+                UI.message(avd_controllers[i].output_file.read.blue)
+
+                UI.message("Removing temp file.".green)
+                avd_controllers[i].output_file.close
+                avd_controllers[i].output_file.unlink
               end
             end
           end

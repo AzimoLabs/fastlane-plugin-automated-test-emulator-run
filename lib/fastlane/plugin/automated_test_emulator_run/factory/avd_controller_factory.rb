@@ -1,8 +1,15 @@
+require 'tempfile'
+
 module Fastlane
   module Factory
 
     class AVD_Controller
-        attr_accessor :command_create_avd, :command_start_avd, :command_delete_avd, :command_apply_config_avd, :command_get_property, :command_kill_device
+        attr_accessor :command_create_avd, :command_start_avd, :command_delete_avd, :command_apply_config_avd, :command_get_property, :command_kill_device,
+                      :output_file
+
+        def self.create_output_file(params)
+          output_file = Tempfile.new('emulator_output', '#{params[:AVD_path]}')
+        end
     end
 
     class AvdControllerFactory
@@ -67,13 +74,16 @@ module Fastlane
            sh_create_avd_abi, 
            sh_create_avd_additional_options].join(" ")
 
+          avd_controller.output_file = Tempfile.new('emulator_output')
+          avd_output = File.exists?(avd_controller.output_file) ? ["&>", avd_controller.output_file.path, "&"].join("") : "&>/dev/null &"
+          
           avd_controller.command_start_avd = [
            sh_launch_emulator_binray, 
            sh_launch_avd_port, 
            sh_launch_avd_name, 
            sh_launch_avd_snapshot, 
            sh_launch_avd_additional_options, 
-           "&>/dev/null &"].join(" ")
+           avd_output].join(" ")
 
           avd_controller.command_delete_avd = [
            path_android_binary,
