@@ -2,6 +2,8 @@
 
 [![fastlane Plugin Badge](https://rawcdn.githack.com/fastlane/fastlane/master/fastlane/assets/plugin-badge.svg)](https://rubygems.org/gems/fastlane-plugin-automated_test_emulator_run)
 
+See [blog post related to this plugin](https://medium.com/azimolabs/managing-android-virtual-devices-during-test-session-98a403acffc2#.upcmonil1). You can learn there how to create basic setup for this plugin step by step.
+
 ## About automated_test_emulator_run
 
 Starts any number of AVDs. AVDs are created and configured automatically according to user liking before instrumentation test process starts (started either via shell command or from gradle) and killed/deleted after test process finishes.
