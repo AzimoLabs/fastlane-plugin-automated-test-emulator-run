@@ -128,6 +128,7 @@ module Fastlane
                 unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
                   Action.sh(avd_controllers[i].command_kill_device)
                 end
+              end
             end
           end
 
