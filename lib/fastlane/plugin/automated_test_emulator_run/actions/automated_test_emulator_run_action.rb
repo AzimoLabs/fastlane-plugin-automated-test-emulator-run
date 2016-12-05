@@ -118,10 +118,16 @@ module Fastlane
               UI.message("AVDs Booted!".green)
             else
               for i in 0...avd_schemes.length
+                # Display AVD output
+                if (File.exists?(avd_controllers[i].output_file.path))
+                  UI.message(["Displaying log for AVD:", avd_schemes[i].avd_name].join(" ").red)
+                  UI.message(avd_controllers[i].output_file.read.blue)
+                end
+                
+                # Killing devices
                 unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
                   Action.sh(avd_controllers[i].command_kill_device)
                 end
-              end
             end
           end
 
@@ -150,15 +156,7 @@ module Fastlane
                 Action.sh(avd_controllers[i].command_kill_device)
               end
 
-              # Delete AVDs
-              if params[:AVD_clean_after]
-                UI.message("AVD_clean_after param set to true. Deleting AVDs.".green)
-                Action.sh(avd_controllers[i].command_delete_avd)
-              else
-                UI.message("AVD_clean_after param set to false. Created AVDs won't be deleted.".green)
-              end
-
-              # Display output
+              # Display AVD output
               if (File.exists?(avd_controllers[i].output_file.path))
                 UI.message("Displaying log from AVD to console:".green)
                 UI.message(avd_controllers[i].output_file.read.blue)
@@ -166,6 +164,14 @@ module Fastlane
                 UI.message("Removing temp file.".green)
                 avd_controllers[i].output_file.close
                 avd_controllers[i].output_file.unlink
+              end
+
+              # Delete AVDs
+              if params[:AVD_clean_after]
+                UI.message("AVD_clean_after param set to true. Deleting AVDs.".green)
+                Action.sh(avd_controllers[i].command_delete_avd)
+              else
+                UI.message("AVD_clean_after param set to false. Created AVDs won't be deleted.".green)
               end
             end
           end
