@@ -20,18 +20,21 @@ module Fastlane
             avd_controller = Factory::AvdControllerFactory.get_avd_controller(params, avd_schemes[i])
             avd_controllers << avd_controller
 
-            # Checking for output files
-            if File.exists?(avd_controller.output_file.path) 
-              UI.message([
-                "Successfully created tmp output file for AVD:", 
-                avd_schemes[i].avd_name + ".", 
-                "File: " + avd_controller.output_file.path].join(" ").green)
-            else
-              UI.message([
-                "Unable to create output file for AVD:", 
-                avd_schemes[i].avd_name + ".", 
-                "Output will be delegated to null and lost. Check your save/read permissions."].join(" ").red)
+            if params[:verbose] 
+              # Checking for output files
+              if File.exists?(avd_controller.output_file.path) 
+                UI.message([
+                  "Successfully created tmp output file for AVD:", 
+                  avd_schemes[i].avd_name + ".", 
+                  "File: " + avd_controller.output_file.path].join(" ").green)
+              else
+                UI.message([
+                  "Unable to create output file for AVD:", 
+                  avd_schemes[i].avd_name + ".", 
+                  "Output will be delegated to null and lost. Check your save/read permissions."].join(" ").red)
+              end
             end
+
           end
 
           all_avd_launched = false
@@ -118,10 +121,13 @@ module Fastlane
               UI.message("AVDs Booted!".green)
             else
               for i in 0...avd_schemes.length
-                # Display AVD output
-                if (File.exists?(avd_controllers[i].output_file.path))
-                  UI.message(["Displaying log for AVD:", avd_schemes[i].avd_name].join(" ").red)
-                  UI.message(avd_controllers[i].output_file.read.blue)
+                
+                if params[:verbose] 
+                  # Display AVD output
+                  if (File.exists?(avd_controllers[i].output_file.path))
+                    UI.message(["Displaying log for AVD:", avd_schemes[i].avd_name].join(" ").red)
+                    UI.message(avd_controllers[i].output_file.read.blue)
+                  end
                 end
                 
                 # Killing devices
@@ -157,14 +163,16 @@ module Fastlane
                 Action.sh(avd_controllers[i].command_kill_device)
               end
 
-              # Display AVD output
-              if (File.exists?(avd_controllers[i].output_file.path))
-                UI.message("Displaying log from AVD to console:".green)
-                UI.message(avd_controllers[i].output_file.read.blue)
+              if params[:verbose]
+                # Display AVD output
+                if (File.exists?(avd_controllers[i].output_file.path))
+                  UI.message("Displaying log from AVD to console:".green)
+                  UI.message(avd_controllers[i].output_file.read.blue)
 
-                UI.message("Removing temp file.".green)
-                avd_controllers[i].output_file.close
-                avd_controllers[i].output_file.unlink
+                  UI.message("Removing temp file.".green)
+                  avd_controllers[i].output_file.close
+                  avd_controllers[i].output_file.unlink
+                end
               end
 
               # Delete AVDs
@@ -319,6 +327,13 @@ module Fastlane
                                        optional: true,
                                        conflicting_options: [:shell_command],
                                        is_string: true),
+
+          #mode
+          FastlaneCore::ConfigItem.new(key: :verbose,
+                                       env_name: "AVD_VERBOSE",
+                                       description: "Allows to turn on/off mode verbose which displays output of AVDs",
+                                       default_value: false,
+                                       optional: true),
         ]
         end
 
