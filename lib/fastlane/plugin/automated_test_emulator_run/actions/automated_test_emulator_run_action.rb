@@ -139,8 +139,6 @@ module Fastlane
           end
 
           # Launching tests
-          gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
-
           shell_task = "#{params[:shell_task]}" unless params[:shell_task].nil?
           gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
 
@@ -152,6 +150,8 @@ module Fastlane
             end
 
             unless gradle_task.nil?
+              gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
+
               UI.message("Using gradle task.".green)
               gradle.trigger(task: params[:gradle_task], flags: params[:gradle_flags], serial: nil)
             end
