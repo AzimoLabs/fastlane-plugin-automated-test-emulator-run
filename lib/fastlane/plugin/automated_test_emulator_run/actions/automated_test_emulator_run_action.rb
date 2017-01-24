@@ -314,7 +314,7 @@ module Fastlane
                                        is_string: false,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :ADB_restart,
-                                       env_name: "ADB_restart",
+                                       env_name: "ADB_RESTART",
                                        description: "Allows to switch adb restarting on/off",
                                        default_value: true,
                                        is_string: false,
