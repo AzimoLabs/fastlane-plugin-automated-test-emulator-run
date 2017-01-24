@@ -71,9 +71,13 @@ module Fastlane
             end
 
             # Restart ADB
-            UI.message("Restarting adb".yellow)
-            Action.sh(adb_controller.command_stop)
-            Action.sh(adb_controller.command_start)
+            if params[:ADB_restart]
+              UI.message("Restarting adb".yellow)
+              Action.sh(adb_controller.command_stop)
+              Action.sh(adb_controller.command_start)
+            else
+              UI.message("ADB won't be restarted. 'ADB_restart' set to false.".yellow)
+            end
 
             # Applying custom configs (it's not done directly after create because 'cat' operation seems to fail overwrite)
             for i in 0...avd_schemes.length
@@ -284,7 +288,7 @@ module Fastlane
                                        optional: true),
 
 
-          #emulator re-launch config params
+          #launch config params
           FastlaneCore::ConfigItem.new(key: :AVD_param_launch_timeout,
                                        env_name: "AVD_PARAM_LAUNCH_TIMEOUT",
                                        description: "Timeout in seconds. Even though ADB might find all devices you still might want to wait for animations to finish and system to boot. Default 60 seconds",
@@ -309,7 +313,13 @@ module Fastlane
                                        default_value: true,
                                        is_string: false,
                                        optional: true),
-
+          FastlaneCore::ConfigItem.new(key: :ADB_restart,
+                                       env_name: "ADB_restart",
+                                       description: "Allows to switch adb restarting on/off.",
+                                       default_value: true,
+                                       is_string: false,
+                                       optional: true),
+          
           #launch commands
           FastlaneCore::ConfigItem.new(key: :shell_task,
                                        env_name: "SHELL_TASK",
