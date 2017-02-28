@@ -271,8 +271,8 @@ module Fastlane
           #paths
           FastlaneCore::ConfigItem.new(key: :AVD_path,
                                        env_name: "AVD_PATH",
-                                       description: "The path to your android AVD directory (root). HOME/.android/avd by default",
-                                       default_value: ENV['HOME'] + '/.android/avd',
+                                       description: "The path to your android AVD directory (root). ANDROID_SDK_HOME by default",
+                                       default_value: ENV['ANDROID_SDK_HOME'],
                                        is_string: true,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :AVD_setup_path,
