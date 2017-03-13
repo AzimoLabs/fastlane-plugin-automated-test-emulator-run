@@ -19,7 +19,7 @@ module Fastlane
 
           # Get paths
           path_sdk = "#{params[:SDK_path]}"
-          path_android_binary = path_sdk + "/tools/android"
+          path_avdmanager_binary = path_sdk + "/tools/bin/avdmanager"
           path_adb = path_sdk + "/platform-tools/adb"
           path_avd = "#{params[:AVD_path]}"
 
@@ -27,13 +27,12 @@ module Fastlane
           sh_create_answer_no = "echo \"no\" |"
           sh_create_avd = "create avd"
           sh_create_avd_name = ["--name \"", avd_scheme.avd_name, "\""].join("")
-          sh_create_avd_additional_options = avd_scheme.create_avd_additional_options
-          sh_create_config_loc = "#{path_avd}/#{avd_scheme.avd_name}.avd/config.ini"
+          sh_create_avd_package = ["--package \"", avd_scheme.create_avd_package, "\""].join("")
 
-          if avd_scheme.create_avd_target.eql? "" 
-            sh_create_avd_target = ""
+          if avd_scheme.create_avd_device.eql? "" 
+            sh_create_avd_device = ""
           else
-            sh_create_avd_target = ["--target \"", avd_scheme.create_avd_target, "\""].join("")
+            sh_create_avd_device = ["--device \"", avd_scheme.create_avd_device, "\""].join("")
           end
 
           if avd_scheme.create_avd_abi.eql? "" 
@@ -41,6 +40,15 @@ module Fastlane
           else
             sh_create_avd_abi = ["--abi ", avd_scheme.create_avd_abi].join("")
           end
+
+          if avd_scheme.create_avd_tag.eql? "" 
+            sh_create_avd_tag = ""
+          else
+            sh_create_avd_tag = ["--tag ", avd_scheme.create_avd_tag].join("")
+          end
+
+          sh_create_avd_additional_options = avd_scheme.create_avd_additional_options
+          sh_create_config_loc = "#{path_avd}/#{avd_scheme.avd_name}.avd/config.ini"
           
           # Launch AVD shell command parts
           sh_launch_emulator_binray = [path_sdk, "/tools/", avd_scheme.launch_avd_launch_binary_name].join("")
@@ -66,13 +74,15 @@ module Fastlane
           # Assemble AVD controller
           avd_controller = AVD_Controller.new
           avd_controller.command_create_avd = [
-           sh_create_answer_no, 
-           path_android_binary, 
-           sh_create_avd, 
-           sh_create_avd_name, 
-           sh_create_avd_target, 
-           sh_create_avd_abi, 
-           sh_create_avd_additional_options].join(" ")
+            sh_create_answer_no, 
+            path_avdmanager_binary,
+            sh_create_avd,
+            sh_create_avd_name,
+            sh_create_avd_package,
+            sh_create_avd_device,
+            sh_create_avd_tag,
+            sh_create_avd_abi,
+            sh_create_avd_additional_options].join(" ")
 
           avd_controller.output_file = Tempfile.new('emulator_output')
           avd_output = File.exists?(avd_controller.output_file) ? ["&>", avd_controller.output_file.path, "&"].join("") : "&>/dev/null &"
@@ -86,7 +96,7 @@ module Fastlane
            avd_output].join(" ")
 
           avd_controller.command_delete_avd = [
-           path_android_binary,
+           path_avdmanager_binary,
            sh_delete_avd].join(" ")
 
           if path_avd.nil? || (avd_scheme.create_avd_hardware_config_filepath.eql? "")

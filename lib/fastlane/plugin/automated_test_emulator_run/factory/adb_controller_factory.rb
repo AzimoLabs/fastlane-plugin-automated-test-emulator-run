@@ -12,7 +12,7 @@ module Fastlane
 
           # Get paths
           path_sdk = "#{params[:SDK_path]}"
-          path_android_binary = path_sdk + "/tools/android"
+          path_avdmanager_binary = path_sdk + "/tools/bin/avdmanager"
           path_adb = path_sdk + "/platform-tools/adb"
 
           # ADB shell command parts
@@ -45,7 +45,7 @@ module Fastlane
            ].join(" ")
 
           adb_controller.command_get_avds = [
-           path_android_binary, 
+           path_avdmanager_binary, 
            sh_list_avd_adb].join(" ").chomp
   
           return adb_controller

@@ -48,7 +48,7 @@ module Fastlane
            
             for i in 0...avd_schemes.length           
               unless devices.match(avd_schemes[i].avd_name).nil?
-                UI.message(["AVD with name '", avd_schemes[i].avd_name, " 'currently exists."].join("").yellow)
+                UI.message(["AVD with name '", avd_schemes[i].avd_name, "' currently exists."].join("").yellow)
                 if params[:AVD_recreate_new]
                   # Delete existing AVDs
                   UI.message("AVD_create_new parameter set to true.".yellow)
@@ -192,8 +192,9 @@ module Fastlane
 
         def self.wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, timeout)
           timeoutInSeconds= timeout.to_i
+          interval = 1000 * 10
           startTime = Time.now
-
+          lastCheckTime = Time.now
           launch_status_hash = Hash.new
           device_visibility_hash = Hash.new
 
@@ -206,37 +207,55 @@ module Fastlane
           launch_status = false
           loop do
             currentTime = Time.now
-            devices = Action.sh(adb_controller.command_get_devices)
+            if ((currentTime - lastCheckTime) * 1000) > interval 
+              lastCheckTime = currentTime
+              devices = Action.sh(adb_controller.command_get_devices)
 
-            # Check if device is visible
-            all_devices_visible = true
-            device_visibility_hash.each do |name, is_visible|
-              unless (devices.match(name).nil? || is_visible)
-                device_visibility_hash[name] = true
+              # Check if device is visible
+              all_devices_visible = true
+              device_visibility_hash.each do |name, is_visible|
+                unless (devices.match(name).nil? || is_visible)
+                  device_visibility_hash[name] = true
+                end
+                  all_devices_visible = false unless is_visible
               end
-              all_devices_visible = false unless is_visible
-            end
 
-            # Check if device is booted
-            all_devices_booted = true
-            launch_status_hash.each do |name, is_booted|
-              unless (devices.match(name + " device").nil? || is_booted)
-                launch_status_hash[name] = true
+              # Check for unauthorized statuses and break further check if any found - WORKAROUND (temporary I hope...)
+              any_of_devices_unauthorized = devices.include?("unauthorized")
+              if any_of_devices_unauthorized
+                UI.message(["This seems to be bug of recent Build Tools 25.0.2. Device is launched but ADB status froze with value 'unauthorized'."].join("").red)
+                UI.message(["Unfortunately to workaround this, ADB server has to be restarted - in order to update device statuses. We hope it can be fixed soon. More info at:"].join("").red)
+                UI.message(["https://github.com/AzimoLabs/fastlane-plugin-automated-test-emulator-run/issues/8"].join("").yellow)
+
+                # Restart ADB
+                UI.message("Restarting adb".yellow)
+                Action.sh(adb_controller.command_stop)
+                Action.sh(adb_controller.command_start)
+                next
               end
-              all_devices_booted = false unless is_booted
-            end
 
-            if ((currentTime - startTime) >= timeoutInSeconds) 
-              UI.message(["AVD ADB loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
-              launch_status = false
-              break
-            end
+              # Check if device is booted
+              all_devices_booted = true
+              launch_status_hash.each do |name, is_booted|
+                unless (devices.match(name + " device").nil? || is_booted)
+                  launch_status_hash[name] = true
+                end
+                all_devices_booted = false unless launch_status_hash[name]
+              end
 
-            if (all_devices_booted && all_devices_visible)
-              launch_status = true
-              break
+              # Quit if timout reached
+              if ((currentTime - startTime) >= timeoutInSeconds) 
+                UI.message(["AVD ADB loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
+                launch_status = false
+                break
+              end
+
+              # Quit if all devices booted
+              if (all_devices_booted && all_devices_visible)
+                launch_status = true
+                break
+              end
             end
-            sleep(10)
           end
           return launch_status
         end
@@ -272,7 +291,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :AVD_path,
                                        env_name: "AVD_PATH",
                                        description: "The path to your android AVD directory (root). ANDROID_SDK_HOME by default",
-                                       default_value: ENV['ANDROID_SDK_HOME'],
+                                       default_value: (ENV['ANDROID_SDK_HOME'].nil? or ENV['ANDROID_SDK_HOME'].eql?("")) ? "~/.android/avd" : ENV['ANDROID_SDK_HOME'],
                                        is_string: true,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :AVD_setup_path,

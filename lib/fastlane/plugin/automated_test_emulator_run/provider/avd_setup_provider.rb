@@ -2,7 +2,7 @@ module Fastlane
   module Provider
 
     class AVD_scheme
-      attr_accessor :avd_name, :create_avd_target, :create_avd_abi, :create_avd_hardware_config_filepath, :create_avd_additional_options, 
+      attr_accessor :avd_name, :create_avd_package, :create_avd_device, :create_avd_tag, :create_avd_abi, :create_avd_hardware_config_filepath, :create_avd_additional_options, 
                     :launch_avd_port, :launch_avd_launch_binary_name, :launch_avd_additional_options, :launch_avd_snapshot_filepath
     end
 
@@ -27,10 +27,13 @@ module Fastlane
 
             avd_scheme = AVD_scheme.new
             avd_scheme.avd_name = avd_hash['avd_name']
-            avd_scheme.create_avd_target = avd_hash['create_avd_target']
+
+            avd_scheme.create_avd_package = avd_hash['create_avd_package']
+            avd_scheme.create_avd_device = avd_hash['create_avd_device']
+            avd_scheme.create_avd_tag = avd_hash['create_avd_tag']
             avd_scheme.create_avd_abi = avd_hash['create_avd_abi']
             avd_scheme.create_avd_hardware_config_filepath = avd_hash['create_avd_hardware_config_filepath']
-            avd_scheme.create_avd_additional_options = avd_hash['create_avd_additional_options']
+
             avd_scheme.launch_avd_port = avd_hash['launch_avd_port']
             avd_scheme.launch_avd_launch_binary_name = avd_hash['launch_avd_launch_binary_name']
             avd_scheme.launch_avd_additional_options = avd_hash['launch_avd_additional_options']
@@ -130,17 +133,20 @@ module Fastlane
           if avd_scheme.avd_name.nil? 
               errors.push("avd_name not found")
           end
-          if avd_scheme.create_avd_target.nil? 
-              errors.push("create_avd_target not found")
+          if avd_scheme.create_avd_package.nil? 
+              errors.push("create_avd_package not found")
+          end
+          if avd_scheme.create_avd_device.nil? 
+              errors.push("create_avd_device not found")
+          end
+          if avd_scheme.create_avd_tag.nil? 
+              errors.push("create_avd_tag not found")
           end
           if avd_scheme.create_avd_abi.nil? 
               errors.push("create_avd_abi not found")
           end
           if avd_scheme.create_avd_hardware_config_filepath.nil? 
               errors.push("create_avd_hardware_config_filepath not found")
-          end
-          if avd_scheme.create_avd_additional_options.nil? 
-              errors.push("create_avd_additional_options not found")
           end
           if avd_scheme.launch_avd_snapshot_filepath.nil? 
               errors.push("launch_avd_snapshot_filepath not found")
@@ -154,7 +160,6 @@ module Fastlane
           if avd_scheme.launch_avd_additional_options.nil? 
               errors.push("launch_avd_additional_options not found")
           end
-
           return errors
         end
 
