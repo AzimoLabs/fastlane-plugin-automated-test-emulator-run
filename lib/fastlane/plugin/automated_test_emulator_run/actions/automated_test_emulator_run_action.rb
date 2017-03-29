@@ -93,7 +93,9 @@ module Fastlane
             # Launching AVDs
             UI.message("Launching all AVDs at the same time.".yellow)
             for i in 0...avd_controllers.length
-              Action.sh(avd_controllers[i].command_start_avd)
+              Process.fork do
+                Action.sh(avd_controllers[i].command_start_avd)
+              end
             end
 
             # Wait for AVDs finish booting
@@ -220,20 +222,6 @@ module Fastlane
                   all_devices_visible = false unless is_visible
               end
 
-              # Check for unauthorized statuses and break further check if any found - WORKAROUND (temporary I hope...)
-              any_of_devices_unauthorized = devices.include?("unauthorized")
-              if any_of_devices_unauthorized
-                UI.message(["This seems to be bug of recent Build Tools 25.0.2. Device is launched but ADB status froze with value 'unauthorized'."].join("").red)
-                UI.message(["Unfortunately to workaround this, ADB server has to be restarted - in order to update device statuses. We hope it can be fixed soon. More info at:"].join("").red)
-                UI.message(["https://github.com/AzimoLabs/fastlane-plugin-automated-test-emulator-run/issues/8"].join("").yellow)
-
-                # Restart ADB
-                UI.message("Restarting adb".yellow)
-                Action.sh(adb_controller.command_stop)
-                Action.sh(adb_controller.command_start)
-                next
-              end
-
               # Check if device is booted
               all_devices_booted = true
               launch_status_hash.each do |name, is_booted|
@@ -243,7 +231,7 @@ module Fastlane
                 all_devices_booted = false unless launch_status_hash[name]
               end
 
-              # Quit if timout reached
+              # Quit if timeout reached
               if ((currentTime - startTime) >= timeoutInSeconds) 
                 UI.message(["AVD ADB loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
                 launch_status = false

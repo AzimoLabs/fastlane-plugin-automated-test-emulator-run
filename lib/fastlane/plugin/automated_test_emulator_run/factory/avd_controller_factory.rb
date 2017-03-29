@@ -51,7 +51,7 @@ module Fastlane
           sh_create_config_loc = "#{path_avd}/#{avd_scheme.avd_name}.avd/config.ini"
           
           # Launch AVD shell command parts
-          sh_launch_emulator_binray = [path_sdk, "/tools/", avd_scheme.launch_avd_launch_binary_name].join("")
+          sh_launch_emulator_binary = [path_sdk, "/emulator/", avd_scheme.launch_avd_launch_binary_name].join("")
           sh_launch_avd_name = ["-avd ", avd_scheme.avd_name].join("")
           sh_launch_avd_additional_options = avd_scheme.launch_avd_additional_options
           sh_launch_avd_port = ["-port", avd_scheme.launch_avd_port].join(" ") 
@@ -88,7 +88,7 @@ module Fastlane
           avd_output = File.exists?(avd_controller.output_file) ? ["&>", avd_controller.output_file.path, "&"].join("") : "&>/dev/null &"
           
           avd_controller.command_start_avd = [
-           sh_launch_emulator_binray, 
+           sh_launch_emulator_binary, 
            sh_launch_avd_port, 
            sh_launch_avd_name, 
            sh_launch_avd_snapshot, 
