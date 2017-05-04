@@ -34,13 +34,14 @@ module Fastlane
                   "Output will be delegated to null and lost. Check your save/read permissions."].join(" ").red)
               end
             end
-
           end
 
+          # Reseting wait states
           all_avd_launched = false
+          adb_launch_complete = false 
+          param_launch_complete = false
 
           while(!all_avd_launched)
-
             # Preparation
             UI.message("Configuring environment in order to launch emulators: ".yellow)
             UI.message("Getting avaliable AVDs".yellow)
@@ -100,26 +101,41 @@ module Fastlane
 
             # Wait for AVDs finish booting
             UI.message("Waiting for AVDs to finish booting.".yellow)
-            boot_status = []
-            for i in 0...avd_schemes.length
-              boot_status << false
-            end
-
             UI.message("Performig wait for ADB boot".yellow)
-            all_avd_launched = wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, "#{params[:AVD_adb_launch_timeout]}")
+            adb_launch_complete = wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, "#{params[:AVD_adb_launch_timeout]}")
 
-            if all_avd_launched
+            # Wait for AVD params finish booting
+            if adb_launch_complete
               UI.message("Wait for ADB boot completed with success".yellow)
-              UI.message("Performing wait for params: dev.bootcomplete, sys.boot_completed, init.svc.bootanim.".yellow)
-              for i in 0...avd_schemes.length
-                all_avd_launched = wait_for_emulator_boot_by_params(adb_controller, avd_controllers[i], "#{params[:AVD_param_launch_timeout]}")
-                unless all_avd_launched 
-                  break 
-                end     
+
+              if (params[:AVD_wait_for_bootcomplete] || params[:AVD_wait_for_boot_completed] || params[:AVD_wait_for_bootanim])
+                message = "Performing wait for params: "
+                
+                if params[:AVD_wait_for_bootcomplete]
+                  message += "'dev.bootcomplete', "
+                end
+               
+                if params[:AVD_wait_for_boot_completed]
+                  message += "'sys.boot_completed', "
+                end
+               
+                if params[:AVD_wait_for_bootanim]
+                  message += "'init.svc.bootanim', "
+                end
+               
+                message = message[0...-2] + "."
+                UI.message(message.yellow)
+
+                param_launch_complete = wait_for_emulator_boot_by_params(params, adb_controller, avd_controllers, avd_schemes, "#{params[:AVD_param_launch_timeout]}")
+              else
+                UI.message("Wait for AVD launch params was turned off. Skipping...".yellow)
+                param_launch_complete = true
               end
             else 
               UI.message("Wait for ADB boot failed".yellow)
             end
+
+            all_avd_launched = adb_launch_complete && param_launch_complete
 
             # Deciding if AVD launch should be restarted
             devices = Action.sh(adb_controller.command_get_devices)
@@ -127,7 +143,6 @@ module Fastlane
               UI.message("AVDs Booted!".green)
             else
               for i in 0...avd_schemes.length
-                
                 if params[:verbose] 
                   # Display AVD output
                   if (File.exists?(avd_controllers[i].output_file.path))
@@ -248,29 +263,83 @@ module Fastlane
           return launch_status
         end
 
-        def self.wait_for_emulator_boot_by_params(adb_controller, avd_controller, timeout)
-            timeoutInSeconds= timeout.to_i
-            startTime = Time.now
+        def self.wait_for_emulator_boot_by_params(params, adb_controller, avd_controllers, avd_schemes, timeout)
+          timeout_in_seconds= timeout.to_i
+          interval = 1000 * 10
+          all_params_launched = false
+          start_time = last_scan_ended = Time.now
+          device_boot_statuses = Hash.new
 
-            launch_status = false
-            loop do
-              dev_bootcomplete, _stdeerr, _status = Open3.capture3([avd_controller.command_get_property, "dev.bootcomplete"].join(" ")) 
-              sys_boot_completed, _stdeerr, _status = Open3.capture3([avd_controller.command_get_property, "sys.boot_completed"].join(" ")) 
-              bootanim, _stdeerr, _status = Open3.capture3([avd_controller.command_get_property, "init.svc.bootanim"].join(" ")) 
-              currentTime = Time.now
+          loop do
+            current_time = Time.now
 
-              if (currentTime - startTime) >= timeoutInSeconds
-                UI.message(["AVD param loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
-                launch_status = false
-                break
+            # Performing single scan over each device
+            if (((current_time - last_scan_ended) * 1000) >= interval || start_time == last_scan_ended)
+              for i in 0...avd_schemes.length
+                avd_schema = avd_schemes[i]
+                avd_controller = avd_controllers[i]
+                avd_param_boot_hash = Hash.new
+                avd_param_status_hash = Hash.new
+                avd_booted = false
+                
+                # Retreiving device parameters according to config
+                if params[:AVD_wait_for_bootcomplete]
+                  dev_bootcomplete, _stdeerr, _status = Open3.capture3([avd_controller.command_get_property, "dev.bootcomplete"].join(" "))
+                  avd_param_boot_hash.store("dev.bootcomplete", dev_bootcomplete.strip.eql?("1"))
+                  avd_param_status_hash.store("dev.bootcomplete", dev_bootcomplete)
+                end
+
+                if params[:AVD_wait_for_boot_completed] 
+                   sys_boot_completed, _stdeerr, _status = Open3.capture3([avd_controller.command_get_property, "sys.boot_completed"].join(" "))
+                   avd_param_boot_hash.store("sys.boot_completed", sys_boot_completed.strip.eql?("1"))
+                   avd_param_status_hash.store("sys.boot_completed", sys_boot_completed)
+                end
+
+                if params[:AVD_wait_for_bootanim]
+                   bootanim, _stdeerr, _status = Open3.capture3([avd_controller.command_get_property, "init.svc.bootanim"].join(" ")) 
+                   avd_param_boot_hash.store("init.svc.bootanim", bootanim.strip.eql?("stopped"))
+                   avd_param_status_hash.store("init.svc.bootanim", bootanim)
+                end
+                
+                # Checking for param statuses
+                avd_param_boot_hash.each do |name, is_booted|
+                  if !is_booted
+                    break
+                  end
+                  avd_booted = true
+                end
+                device_boot_statuses.store(avd_schema.avd_name, avd_booted)
+
+                # Plotting current wait results
+                device_log = "Device 'emulator-" + avd_schemes[i].launch_avd_port.to_s + "' launch status:"
+                UI.message(device_log.magenta)
+                avd_param_boot_hash.each do |name, is_booted|
+                  device_log = "'" + name + "' - '" + avd_param_status_hash[name].strip + "' (launched: " + is_booted.to_s + ")"
+                  UI.message(device_log.magenta)
+                end
               end
-
-              if (dev_bootcomplete.strip == "1" && sys_boot_completed.strip == "1" && bootanim.strip == "stopped")
-                launch_status = true
-                break
-              end
+              last_scan_ended = Time.now
             end
-            return launch_status
+         
+            # Checking if wait doesn't last too long
+            if (current_time - start_time) >= timeout_in_seconds
+              UI.message(["AVD param loading took more than ", timeout, ". Attempting to re-launch."].join("").red)
+              all_params_launched = false
+              break
+            end
+
+            # Finishing wait with success if all params are loaded for every device
+            device_boot_statuses.each do |name, is_booted|
+              if !is_booted
+                break
+              end
+              all_params_launched = true
+            end
+            if all_params_launched 
+              break
+            end
+          end 
+          return all_params_launched
         end
        
         def self.available_options
@@ -323,6 +392,24 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :ADB_restart,
                                        env_name: "ADB_RESTART",
                                        description: "Allows to switch adb restarting on/off",
+                                       default_value: true,
+                                       is_string: false,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :AVD_wait_for_bootcomplete,
+                                       env_name: "AVD_BOOTCOMPLETE_WAIT",
+                                       description: "Allows to switch wait for 'dev.bootcomplete' AVD launch param on/off",
+                                       default_value: true,
+                                       is_string: false,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :AVD_wait_for_boot_completed,
+                                       env_name: "AVD_BOOT_COMPLETED_WAIT",
+                                       description: "Allows to switch wait for 'sys.boot_completed' AVD launch param on/off",
+                                       default_value: true,
+                                       is_string: false,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :AVD_wait_for_bootanim,
+                                       env_name: "ABD_BOOTANIM_WAIT",
+                                       description: "Allows to switch wait for 'init.svc.bootanim' AVD launch param on/off",
                                        default_value: true,
                                        is_string: false,
                                        optional: true),
