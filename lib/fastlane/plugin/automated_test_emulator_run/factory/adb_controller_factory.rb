@@ -18,7 +18,7 @@ module Fastlane
           # ADB shell command parts
           sh_stop_adb = "kill-server"
           sh_start_adb = "start-server"
-          sh_devices_adb = "devices | grep [0-9] | tr -s \"\t\" \" | cut -d\""
+          sh_devices_adb = "devices"
           sh_wait_for_device_adb = "wait-for-device"
           sh_list_avd_adb = "list avd"
 

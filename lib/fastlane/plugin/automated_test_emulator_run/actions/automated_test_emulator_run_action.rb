@@ -138,7 +138,15 @@ module Fastlane
             all_avd_launched = adb_launch_complete && param_launch_complete
 
             # Deciding if AVD launch should be restarted
-            devices = Action.sh(adb_controller.command_get_devices)
+            devices_output = Action.sh(adb_controller.command_get_devices)
+
+            devices = ""
+            devices_output.each_line do |line|
+              if line.include?("emulator-")
+                devices += line.sub(/\t/, " ")  
+              end
+            end
+            
             if all_avd_launched
               UI.message("AVDs Booted!".green)
             else
@@ -226,7 +234,14 @@ module Fastlane
             currentTime = Time.now
             if ((currentTime - lastCheckTime) * 1000) > interval 
               lastCheckTime = currentTime
-              devices = Action.sh(adb_controller.command_get_devices)
+              devices_output = Action.sh(adb_controller.command_get_devices)
+
+              devices = ""
+              devices_output.each_line do |line|
+                if line.include?("emulator-")
+                  devices += line.sub(/\t/, " ")  
+                end
+              end
 
               # Check if device is visible
               all_devices_visible = true
