@@ -60,7 +60,7 @@ Parameters:
 <br>For official help refer to `avdmanager` binary file: `<sdk_root>/tools/bin/avdmanager create avd`
 - `avd_name` - name of your AVD, avoid using spaces, this field is necessary
 - `create_avd_package` - path to system image in example "system-images;android-23;google_apis;x86_64"
-- `create_avd_device` - optional label for device e.g. "For plugin tests only. Do not touch."
+- `create_avd_device` - name of your device visible on `avdmanager list device` list
 - `create_avd_tag` - the sys-img tag to use for the AVD. e.g. if you are using Google Apis then set it to "google_apis"
 - `create_avd_abi` - abi for AVD e.g. "x86" or "x86_64" (https://developer.android.com/ndk/guides/abis.html)
 - `create_avd_hardware_config_filepath` - path to config.ini file containing custom config for your AVD. After AVD is created this file will be copied into AVD location before it launches.
