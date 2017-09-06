@@ -4,8 +4,8 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'fastlane/plugin/automated_test_emulator_run/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'fastlane-plugin-automated_test_emulator_run'
-  spec.version       = Fastlane::AutomatedTestEmulatorRun::VERSION
+  spec.name          = 'fastlane-plugin-automated_test_emulator_run_xing'
+  spec.version       = Fastlane::AutomatedTestEmulatorRunXing::VERSION
   spec.author        = %q{Kamil Krzyk}
   spec.email         = %q{krzyk.kamil@gmail.com}
 
