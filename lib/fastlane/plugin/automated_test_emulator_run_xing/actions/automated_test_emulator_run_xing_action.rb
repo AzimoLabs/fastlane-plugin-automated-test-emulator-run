@@ -194,7 +194,7 @@ module Fastlane
               spoon_devices = ""
               for i in 0...avd_schemes.length
                 ports << avd_schemes[i].launch_avd_port
-                spoon_devices = spoon_devices + "-pSpoonDevice=emulator-" + avd_schemes[i].launch_avd_port + " "
+                spoon_devices = spoon_devices + "-pSpoonDevice=emulator-" + avd_schemes[i].launch_avd_port.to_s + " "
               end
 
               gradle_flags = params[:gradle_flags]
