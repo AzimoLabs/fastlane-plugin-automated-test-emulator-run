@@ -57,7 +57,6 @@ module Fastlane
             avd_scheme = avd_scheme_list[i]
             if avd_scheme.launch_avd_port.eql? ""
               avd_scheme.launch_avd_port = avaliable_ports[0]
-              $Ports << avd_scheme.launch_avd_port
               avaliable_ports.delete(avaliable_ports[0])
             end
           end
