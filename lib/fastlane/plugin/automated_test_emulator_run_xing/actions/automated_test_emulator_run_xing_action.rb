@@ -194,10 +194,8 @@ module Fastlane
               spoon_devices = ""
               for i in 0...avd_schemes.length
                 ports << avd_schemes[i].launch_avd_port
-                #spoon_devices = " " + spoon_devices + "-PspoonDevice=emulator-" + avd_schemes[i].launch_avd_port.to_s + " "
+                spoon_devices = " " + spoon_devices + "-PspoonDevice=emulator-" + avd_schemes[i].launch_avd_port.to_s + " "
               end
-
-              spoon_devices = " " + spoon_devices + "-PspoonDevice=emulator-" + avd_schemes[0].launch_avd_port.to_s + " "
 
               gradle_spoon_task = params[:spoon_task]
               gradle_spoon_task = gradle_spoon_task + spoon_devices
