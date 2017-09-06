@@ -192,7 +192,7 @@ module Fastlane
               UI.message("Using spoon task.".green)
               ports = Array.new
               spoon_devices = "-PspoonDevice="
-              poon_devices = spoon_devices + "emulator-" + avd_schemes[0].launch_avd_port.to_s
+              spoon_devices = spoon_devices + "emulator-" + avd_schemes[0].launch_avd_port.to_s
               for i in 1...avd_schemes.length
                 ports << avd_schemes[i].launch_avd_port
                 spoon_devices = spoon_devices + ",emulator-" + avd_schemes[i].launch_avd_port.to_s
