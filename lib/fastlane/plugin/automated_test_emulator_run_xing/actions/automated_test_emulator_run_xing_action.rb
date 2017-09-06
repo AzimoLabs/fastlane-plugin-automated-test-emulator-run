@@ -466,6 +466,12 @@ module Fastlane
                                        conflicting_options: [:shell_command],
                                        optional: true,
                                        is_string: true),
+         FastlaneCore::ConfigItem.new(key: :spoon_task,
+                                      env_name: "SPOON_TASK",
+                                      description: "The spoon task you want to execute",
+                                      conflicting_options: [:shell_command],
+                                      is_string: true,
+                                      optional: true),
 
           #mode
           FastlaneCore::ConfigItem.new(key: :verbose,
