@@ -190,18 +190,17 @@ module Fastlane
               gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
 
               UI.message("Using spoon task.".green)
-              puts params[:spoon_task]
               ports = Array.new
               spoon_devices = ""
               for i in 0...avd_schemes.length
                 ports << avd_schemes[i].launch_avd_port
-                spoon_devices = spoon_devices + "-pSpoonDevice=emulator-" + avd_schemes[i].launch_avd_port.to_s + " "
+                spoon_devices = " " + spoon_devices + "-pSpoonDevice=emulator-" + avd_schemes[i].launch_avd_port.to_s + " "
               end
 
-              gradle_flags = params[:gradle_flags]
-              gradle_flags = gradle_flags + spoon_devices
+              gradle_spoon_task = params[:spoon_task]
+              gradle_spoon_task = gradle_spoon_task + spoon_devices
 
-              gradle.trigger(task: params[:spoon_task], flags: gradle_flags, serial: nil)
+              gradle.trigger(task: gradle_spoon_task, flags: params[:gradle_flags], serial: nil)
             end
           ensure
             # Clean up
