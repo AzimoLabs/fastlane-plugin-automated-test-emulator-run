@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'fastlane/plugin/automated_test_emulator_run/version'
+require 'fastlane/plugin/automated_test_emulator_run_xing/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'fastlane-plugin-automated_test_emulator_run_xing'
   spec.version       = Fastlane::AutomatedTestEmulatorRunXing::VERSION
-  spec.author        = %q{Kamil Krzyk}
-  spec.email         = %q{krzyk.kamil@gmail.com}
+  spec.author        = %q{Daniel Hartwich}
+  spec.email         = %q{hartwich.daniel@gmail.com}
 
   spec.summary       = %q{Starts n AVDs based on JSON file config. AVDs are created and configured according to user liking before instrumentation test process (started either via shell command or gradle) and killed/deleted after test process finishes.}
-  spec.homepage      = "https://github.com/AzimoLabs/fastlane-plugin-automated-test-emulator-run"
+  spec.homepage      = "https://github.com/dhartwich1991/fastlane-plugin-automated-test-emulator-run"
   spec.license       = "MIT"
 
   spec.files         = Dir["lib/**/*"] + %w(README.md LICENSE)
