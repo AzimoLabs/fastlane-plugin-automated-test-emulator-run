@@ -190,7 +190,7 @@ module Fastlane
               gradle = Helper::GradleHelper.new(gradle_path: Dir["./gradlew"].last)
 
               UI.message("Using spoon task.".green)
-              puts params[:gradle_flags]
+              puts params[:gradle_task]
               ports = Array.new
               spoon_devices = ""
               for i in 0...avd_schemes.length
