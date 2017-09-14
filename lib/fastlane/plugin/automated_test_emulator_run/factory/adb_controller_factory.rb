@@ -2,7 +2,13 @@ module Fastlane
   module Factory
 
     class ADB_Controller
-      attr_accessor :command_stop, :command_start, :command_get_devices, :command_wait_for_device, :command_get_avds
+      attr_accessor :command_stop,
+                    :command_start,
+                    :command_get_devices,
+                    :command_wait_for_device,
+                    :command_get_avds,
+                    :command_clear_logcat,
+                    :command_logcat_to_file
     end
 
     class AdbControllerFactory
