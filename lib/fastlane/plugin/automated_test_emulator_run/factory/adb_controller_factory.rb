@@ -49,7 +49,7 @@ module Fastlane
            sh_wait_for_device_adb
            ].join(" ")
 
-          adb_controller.adb_path = adb_path
+          adb_controller.adb_path = path_adb
 
           adb_controller.command_get_avds = [
            path_avdmanager_binary, 
