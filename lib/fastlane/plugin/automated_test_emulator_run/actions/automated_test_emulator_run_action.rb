@@ -149,7 +149,10 @@ module Fastlane
             
             if all_avd_launched
               UI.message("AVDs Booted!".green)
-              Action.sh(adb_controller.command_clear_logcat)
+              for i in 0...avd_schemes.length
+                device = ["emulator-", avd_schemes[i].launch_avd_port].join("")
+                Action.sh(adb_controller.command_clear_logcat(device: device)) unless devices.match(device).nil?
+              end
             else
               for i in 0...avd_schemes.length
                 if params[:verbose] 
@@ -187,10 +190,11 @@ module Fastlane
             end
           ensure 
             # Clean up
-            Action.sh(adb_controller.command_logcat_to_file)
             for i in 0...avd_schemes.length
               # Kill all emulators
-              unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
+              device = ["emulator-", avd_schemes[i].launch_avd_port].join("")
+              unless devices.match(device).nil?
+                Action.sh(adb_controller.command_logcat_to_file(device: device))
                 Action.sh(avd_controllers[i].command_kill_device)
               end
 
