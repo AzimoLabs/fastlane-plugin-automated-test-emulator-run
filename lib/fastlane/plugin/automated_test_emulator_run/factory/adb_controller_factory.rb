@@ -7,8 +7,7 @@ module Fastlane
                     :command_get_devices,
                     :command_wait_for_device,
                     :command_get_avds,
-                    :command_clear_logcat,
-                    :command_logcat_to_file
+                    :adb_path
     end
 
     class AdbControllerFactory
@@ -27,8 +26,6 @@ module Fastlane
           sh_devices_adb = "devices"
           sh_wait_for_device_adb = "wait-for-device"
           sh_list_avd_adb = "list avd"
-          sh_clear_logcat_adb = "logcat -c"
-          sh_logcat_to_file = "logcat -d >"
 
           # Assemble ADB controller
           adb_controller = ADB_Controller.new
@@ -52,22 +49,7 @@ module Fastlane
            sh_wait_for_device_adb
            ].join(" ")
 
-          adb_controller.command_clear_logcat do |options|
-            [
-              path_adb,
-              "-s #{options[:device]}",
-              sh_clear_logcat_adb
-            ].join(' ')
-          end
-
-          adb_controller.command_logcat_to_file do |options|
-            [
-              path_adb,
-              "-s #{options[:device]}",
-              sh_logcat_to_file,
-              "#{options[:device]}.log"
-            ].join(' ')
-          end
+          adb_controller.adb_path = adb_path
 
           adb_controller.command_get_avds = [
            path_avdmanager_binary, 
