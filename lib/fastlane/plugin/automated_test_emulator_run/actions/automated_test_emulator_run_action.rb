@@ -149,6 +149,13 @@ module Fastlane
             
             if all_avd_launched
               UI.message("AVDs Booted!".green)
+              if params[:logcat]
+                for i in 0...avd_schemes.length
+                  device = ["emulator-", avd_schemes[i].launch_avd_port].join('')
+                  cmd = [adb_controller.adb_path, '-s', device, 'logcat -c'].join(' ')
+                  Action.sh(cmd) unless devices.match(device).nil?
+                end
+              end
             else
               for i in 0...avd_schemes.length
                 if params[:verbose] 
@@ -188,7 +195,13 @@ module Fastlane
             # Clean up
             for i in 0...avd_schemes.length
               # Kill all emulators
-              unless devices.match(["emulator-", avd_schemes[i].launch_avd_port].join("")).nil?
+              device = ["emulator-", avd_schemes[i].launch_avd_port].join("")
+              unless devices.match(device).nil?
+                if params[:logcat]
+                  file = [device, '.log'].join('')
+                  cmd = [adb_controller.adb_path, '-s', device, 'logcat -d >', file].join(' ')
+                  Action.sh(cmd)
+                end
                 Action.sh(avd_controllers[i].command_kill_device)
               end
 
@@ -453,6 +466,12 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :verbose,
                                        env_name: "AVD_VERBOSE",
                                        description: "Allows to turn on/off mode verbose which displays output of AVDs",
+                                       default_value: false,
+                                       is_string: false,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :logcat,
+                                       env_name: "ADB_LOGCAT",
+                                       description: "Allows to turn logcat on/off so you can debug crashes and such",
                                        default_value: false,
                                        is_string: false,
                                        optional: true),

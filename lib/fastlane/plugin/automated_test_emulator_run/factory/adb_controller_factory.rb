@@ -2,7 +2,12 @@ module Fastlane
   module Factory
 
     class ADB_Controller
-      attr_accessor :command_stop, :command_start, :command_get_devices, :command_wait_for_device, :command_get_avds
+      attr_accessor :command_stop,
+                    :command_start,
+                    :command_get_devices,
+                    :command_wait_for_device,
+                    :command_get_avds,
+                    :adb_path
     end
 
     class AdbControllerFactory
@@ -43,6 +48,8 @@ module Fastlane
            path_adb,
            sh_wait_for_device_adb
            ].join(" ")
+
+          adb_controller.adb_path = path_adb
 
           adb_controller.command_get_avds = [
            path_avdmanager_binary, 
