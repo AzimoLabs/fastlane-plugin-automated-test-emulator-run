@@ -101,7 +101,7 @@ module Fastlane
 
             # Wait for AVDs finish booting
             UI.message("Waiting for AVDs to finish booting.".yellow)
-            UI.message("Performig wait for ADB boot".yellow)
+            UI.message("Performing wait for ADB boot".yellow)
             adb_launch_complete = wait_for_emulator_boot_by_adb(adb_controller, avd_schemes, "#{params[:AVD_adb_launch_timeout]}")
 
             # Wait for AVD params finish booting
