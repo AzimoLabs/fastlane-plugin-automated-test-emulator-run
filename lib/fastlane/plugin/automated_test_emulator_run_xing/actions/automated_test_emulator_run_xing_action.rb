@@ -171,6 +171,7 @@ module Fastlane
           shell_task = "#{params[:shell_task]}" unless params[:shell_task].nil?
           gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
           spoon_task = "#{params[:spoon_task]}" unless params[:spoon_task].nil?
+          calabash_task = "#{params[:calabash_task]}" unless params[:calabash_task].nil?
 
           UI.message("Starting tests".green)
           begin
@@ -203,6 +204,24 @@ module Fastlane
 
               gradle.trigger(task: gradle_spoon_task, flags: params[:gradle_flags], serial: nil)
             end
+
+            if calabash_task
+              UI.message("Using Calabash task.".green)
+              calabash_task = calabash_task.split(';')
+              primary_run_command = calabash_task.shift
+              rerun_command = calabash_task.shift
+              if calabash_task.count > avd_schemes.count
+                UI.message("#{calabash_task.count} tasks were sent to executor. Shoudn't me more than #{avd_schemes.count}".red)
+                return
+              end
+
+              calabash_task.zip(avd_schemes).each do |test_suite, scheme|
+                Thread.new do
+                  Action.sh("EMULATORS_NAME=emulator-#{scheme.launch_avd_port} #{primary_run_command} #{test_suite.strip} #{rerun_command}")
+                end
+              end
+            end
+
           ensure
             # Clean up
             for i in 0...avd_schemes.length
@@ -473,7 +492,12 @@ module Fastlane
                                       conflicting_options: [:shell_command],
                                       is_string: true,
                                       optional: true),
-
+          FastlaneCore::ConfigItem.new(key: :calabash_task,
+                                       env_name: "calabash_task",
+                                       description: "The calabash task you want to execute",
+                                       conflicting_options: [:shell_command],
+                                       is_string: true,
+                                       optional: true),
           #mode
           FastlaneCore::ConfigItem.new(key: :verbose,
                                        env_name: "AVD_VERBOSE",
