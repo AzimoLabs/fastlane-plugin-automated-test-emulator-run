@@ -78,7 +78,7 @@ Hints:
 - all fields need to be present in JSON, if you don't need any of the parameters just leave it empty
 - pick even ports for your AVDs
 - if you can't launch more than 2 AVDs be sure to check how much memory is your HAXM allowed to use (by default it is 2GB and that will allow you to launch around 2 AVDs) If you face any problems with freezing AVDs then be sure to reinstall your HAXM and allow it to use more of RAM (https://software.intel.com/en-us/android/articles/intel-hardware-accelerated-execution-manager)
-- make sure you have all targets/abis installed on your PC if you want to use them (type in terminal: `android list targets`)
+- make sure you have all targets/abis installed on your PC if you want to use them (type in terminal: `android list target`)
 - we recommend adding `-gpu on` to your launching options for each device, it helps when working with many AVDs
 
 Example:
