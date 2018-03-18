@@ -46,8 +46,16 @@ module Fastlane
             UI.message("Configuring environment in order to launch emulators: ".yellow)
             UI.message("Getting avaliable AVDs".yellow)
             devices = Action.sh(adb_controller.command_get_avds)
-           
-            for i in 0...avd_schemes.length           
+            packages = Action.sh(adb_controller.command_get_installed_packages)
+
+            for i in 0...avd_schemes.length
+              unless packages.match(avd_schemes[i].create_avd_package + "\\s*|").nil?
+                UI.message(["Missing package ", avd_schemes[i].create_avd_package, " installing..."].join("").yellow)
+                Action.sh(avd_controllers[i].command_install_package)
+              else
+                UI.message(["Package ", avd_schemes[i].create_avd_package, " already installed"].join("").yellow)
+              end
+
               unless devices.match(avd_schemes[i].avd_name).nil?
                 UI.message(["AVD with name '", avd_schemes[i].avd_name, "' currently exists."].join("").yellow)
                 if params[:AVD_recreate_new]
