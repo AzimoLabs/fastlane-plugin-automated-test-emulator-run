@@ -7,6 +7,7 @@ module Fastlane
                     :command_get_devices,
                     :command_wait_for_device,
                     :command_get_avds,
+                    :command_get_installed_packages,
                     :adb_path
     end
 
@@ -18,6 +19,7 @@ module Fastlane
           # Get paths
           path_sdk = "#{params[:SDK_path]}"
           path_avdmanager_binary = path_sdk + "/tools/bin/avdmanager"
+          path_sdkmanager_binary = path_sdk + "/tools/bin/sdkmanager"
           path_adb = path_sdk + "/platform-tools/adb"
 
           # ADB shell command parts
@@ -54,6 +56,11 @@ module Fastlane
           adb_controller.command_get_avds = [
            path_avdmanager_binary, 
            sh_list_avd_adb].join(" ").chomp
+
+          adb_controller.command_get_installed_packages = [
+            path_sdkmanager_binary,
+            "--list"
+          ].join(" ")
   
           return adb_controller
         end 
