@@ -1,5 +1,6 @@
 require 'open3'
 require 'json'
+require 'sys-proctable'
 
 module Fastlane
   module Actions
@@ -228,6 +229,10 @@ module Fastlane
 
               # Delete AVDs
               if params[:AVD_clean_after]
+                until Sys::ProcTable.ps.select { |p| p.cmdline.match("-avd " + avd_schemes[i].avd_name + "(\s|$)") }.empty?
+                  UI.message(["Waiting for ", avd_schemes[i].avd_name, " to finish..."].join("").yellow)
+                  sleep 1
+                end
                 UI.message("AVD_clean_after param set to true. Deleting AVDs.".green)
                 Action.sh(avd_controllers[i].command_delete_avd)
               else
