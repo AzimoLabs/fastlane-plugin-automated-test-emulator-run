@@ -38,6 +38,7 @@ module Fastlane
             avd_scheme.launch_avd_launch_binary_name = avd_hash['launch_avd_launch_binary_name']
             avd_scheme.launch_avd_additional_options = avd_hash['launch_avd_additional_options']
             avd_scheme.launch_avd_snapshot_filepath = avd_hash['launch_avd_snapshot_filepath']
+            avd_scheme.create_avd_additional_options = avd_hash['create_avd_additional_options']
 
             errors = check_avd_fields(avd_scheme)
             unless errors.empty?
@@ -147,6 +148,9 @@ module Fastlane
           end
           if avd_scheme.create_avd_hardware_config_filepath.nil? 
               errors.push("create_avd_hardware_config_filepath not found")
+          end
+          if avd_scheme.launch_avd_additional_options.nil? 
+              errors.push("launch_avd_additional_options not found")
           end
           if avd_scheme.launch_avd_snapshot_filepath.nil? 
               errors.push("launch_avd_snapshot_filepath not found")
