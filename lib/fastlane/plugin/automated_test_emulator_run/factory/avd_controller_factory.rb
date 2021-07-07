@@ -4,7 +4,7 @@ module Fastlane
   module Factory
 
     class AVD_Controller
-        attr_accessor :command_create_avd, :command_start_avd, :command_delete_avd, :command_apply_config_avd, :command_get_property, :command_kill_device,
+        attr_accessor :command_install_package, :command_create_avd, :command_start_avd, :command_delete_avd, :command_apply_config_avd, :command_get_property, :command_kill_device,
                       :output_file
 
         def self.create_output_file(params)
@@ -20,6 +20,7 @@ module Fastlane
           # Get paths
           path_sdk = "#{params[:SDK_path]}"
           path_avdmanager_binary = path_sdk + "/tools/bin/avdmanager"
+          path_sdkmanager_binary = path_sdk + "/tools/bin/sdkmanager"
           path_adb = path_sdk + "/platform-tools/adb"
           path_avd = "#{params[:AVD_path]}"
 
@@ -121,6 +122,11 @@ module Fastlane
            sh_device_name_adb,
            sh_kill_device,
            "&>/dev/null"].join(" ")
+
+          avd_controller.command_install_package = [
+            path_sdkmanager_binary,
+            "\"" + avd_scheme.create_avd_package + "\""
+          ].join(" ")
 
           return avd_controller
         end 
