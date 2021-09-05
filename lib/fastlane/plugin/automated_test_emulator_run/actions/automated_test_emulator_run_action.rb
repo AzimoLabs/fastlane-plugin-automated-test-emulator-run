@@ -177,9 +177,15 @@ module Fastlane
           # Launching tests
           shell_task = "#{params[:shell_task]}" unless params[:shell_task].nil?
           gradle_task = "#{params[:gradle_task]}" unless params[:gradle_task].nil?
+          lane_task = params[:lane] unless params[:lane].nil?
 
           UI.message("Starting tests".green)
           begin
+            unless lane_task.nil?
+              UI.message("Using lane task.".green)
+              Fastlane::LaneManager.cruise_lane(params[:lane_platform], lane_task, params[:lane_options])
+            end
+
             unless shell_task.nil?
               UI.message("Using shell task.".green)
               Action.sh(shell_task)
@@ -446,21 +452,39 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :shell_task,
                                        env_name: "SHELL_TASK",
                                        description: "The shell command you want to execute",
-                                       conflicting_options: [:gradle_task], 
+                                       conflicting_options: [:gradle_task, :lane], 
                                        is_string: true,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :gradle_task,
                                        env_name: "GRADLE_TASK",
                                        description: "The gradle task you want to execute",
-                                       conflicting_options: [:shell_command],
+                                       conflicting_options: [:shell_command, :lane],
                                        is_string: true,
                                        optional: true),
           FastlaneCore::ConfigItem.new(key: :gradle_flags,
                                        env_name: "GRADLE_FLAGS",
                                        description: "All parameter flags you want to pass to the gradle command, e.g. `--exitcode --xml file.xml`",
-                                       conflicting_options: [:shell_command],
+                                       conflicting_options: [:shell_command, :lane],
                                        optional: true,
                                        is_string: true),
+          FastlaneCore::ConfigItem.new(key: :lane,
+                                       env_name: "LANE",
+                                       description: "The lane you want to execute",
+                                       conflicting_options: [:shell_command, :gradle_task],
+                                       is_string: true,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :lane_platform,
+                                       env_name: "LANE_PLATFORM",
+                                       description: "The platform of the lane you want to execute",
+                                       conflicting_options: [:shell_command, :gradle_task],
+                                       is_string: true,
+                                       optional: true),
+          FastlaneCore::ConfigItem.new(key: :lane_options,
+                                       env_name: "LANE_OPTIONS",
+                                       description: "The options of the lane you want to execute",
+                                       conflicting_options: [:shell_command, :gradle_task],
+                                       is_string: false,
+                                       optional: true),
 
           #mode
           FastlaneCore::ConfigItem.new(key: :verbose,

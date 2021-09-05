@@ -2,32 +2,40 @@ lane :test do
 
   desc "Lane running all tests with default spoon config"
   lane :Automation_Spoon do
-	gradle(task: "spoon")
+    gradle(task: "spoon")
   end
 
   desc "Runs tests with AVD setup according to JSON file config with usage of spoon."
   lane :Automation_EmulatorRun_Spoon do
-      automated_test_emulator_run(
-        AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
-        gradle_task:"spoon"
-      )
-   end
+    automated_test_emulator_run(
+      AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
+      gradle_task:"spoon"
+    )
+  end
 
   desc "Runs tests with AVD setup according to JSON file config with usage of gradle task."
   lane :Automation_EmulatorRun_Gradle do
-      automated_test_emulator_run(
-        AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
-        gradle_task:"cleanTest createMockDebugCoverageReport --continue"
-      )
-   end
+    automated_test_emulator_run(
+      AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
+      gradle_task:"cleanTest createMockDebugCoverageReport --continue"
+    )
+  end
+
+  desc "Runs tests with AVD setup according to JSON file config with usage of shell task."
+  lane :Automation_EmulatorRun_Shell do
+    automated_test_emulator_run(
+      AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
+      shell_task: "fastlane Automation_Spoon"
+    )
+  end
 
   desc "Runs tests with AVD setup according to JSON file config with usage of other lane."
   lane :Automation_EmulatorRun_Fastlane do
-      automated_test_emulator_run(
-        AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
-        shell_task:"fastlane Automation_Spoon"
-      )
-   end
+    automated_test_emulator_run(
+      AVD_setup_path: "~/<path to your avd setup>/AVD_setup.json",
+      lane: "Automation_Spoon"
+    )
+  end
 
    # more parameters listed in automated_test_emulator_run_action.rb
 end
