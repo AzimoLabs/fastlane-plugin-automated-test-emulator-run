@@ -386,8 +386,8 @@ module Fastlane
                                        optional: false),
           FastlaneCore::ConfigItem.new(key: :SDK_path,
                                        env_name: "SDK_PATH",
-                                       description: "The path to your android sdk directory (root). ANDROID_HOME by default",
-                                       default_value: ENV['ANDROID_HOME'],
+                                       description: "The path to your android sdk directory (root). ANDROID_SDK_ROOT by default",
+                                       default_value: ENV['ANDROID_SDK_ROOT'] || ENV['ANDROID_HOME'],
                                        is_string: true,
                                        optional: true),
 

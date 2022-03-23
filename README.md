@@ -57,7 +57,7 @@ JSON file scheme:
 ```
 
 Parameters:
-<br>For official help refer to `avdmanager` binary file: `<sdk_root>/tools/bin/avdmanager create avd`
+<br>For official help refer to `avdmanager` binary file: `<sdk_root>/cmdline-tools/latest/bin/avdmanager create avd`
 - `avd_name` - name of your AVD, avoid using spaces, this field is necessary
 - `create_avd_package` - path to system image in example "system-images;android-23;google_apis;x86_64"
 - `create_avd_device` - name of your device visible on `avdmanager list device` list

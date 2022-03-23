@@ -16,9 +16,9 @@ module Fastlane
           UI.message(["Preparing commands for Android ADB"].join(" ").yellow)
 
           # Get paths
-          path_sdk = "#{params[:SDK_path]}"
-          path_avdmanager_binary = path_sdk + "/tools/bin/avdmanager"
-          path_adb = path_sdk + "/platform-tools/adb"
+          sdk_helper = Helper::SdkHelper.new(params)
+          path_avdmanager_binary = sdk_helper.avd_manager
+          path_adb = sdk_helper.adb
 
           # ADB shell command parts
           sh_stop_adb = "kill-server"
